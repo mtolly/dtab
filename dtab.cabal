@@ -22,5 +22,5 @@ Library
   ghc-options:        -Wall
 
 Executable dtab
-  Build-Depends:      base, dtab
+  Build-Depends:      base, dtab, text, bytestring
   Main-Is:            Main.hs

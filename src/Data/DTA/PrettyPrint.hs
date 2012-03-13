@@ -2,9 +2,10 @@
 module Data.DTA.PrettyPrint where
 
 import Data.DTA
-import qualified Data.Text as T
 import Text.PrettyPrint.HughesPJ
 import System.IO
+import qualified Data.Text as T
+import qualified Data.ByteString as B
 
 ppChunk :: Chunk -> Doc
 ppChunk c = case c of
@@ -41,8 +42,8 @@ ppKey str = hcat [char '\'', hcat $ map ppChar str, char '\'']
 ppDTA :: DTA -> Doc
 ppDTA = vcat . map ppChunk . treeChunks . topTree
 
-writeDTA :: FilePath -> DTA -> IO ()
-writeDTA fp = writeFile fp . render . ppDTA
+writeDTA :: (T.Text -> B.ByteString) -> FilePath -> DTA -> IO ()
+writeDTA enc fp = B.writeFile fp . enc . T.pack . render . ppDTA
 
-hWriteDTA :: Handle -> DTA -> IO ()
-hWriteDTA h = hPutStr h . render . ppDTA
+hWriteDTA :: (T.Text -> B.ByteString) -> Handle -> DTA -> IO ()
+hWriteDTA enc h = B.hPutStr h . enc . T.pack . render . ppDTA

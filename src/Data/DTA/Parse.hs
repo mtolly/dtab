@@ -2,15 +2,18 @@ module Data.DTA.Parse (pDTA, readDTA, hReadDTA) where
 
 import Data.DTA
 import qualified Data.DTA.Lex as L
-import System.IO
+import System.IO (Handle)
+import qualified Data.Text as T
+import qualified Data.ByteString as B
+import Control.Applicative
 
 -- | Read a DTA (text) from a file.
-readDTA :: FilePath -> IO DTA
-readDTA = fmap (pDTA . L.scan) . readFile
+readDTA :: (B.ByteString -> T.Text) -> FilePath -> IO DTA
+readDTA dec fp = pDTA . L.scan . T.unpack . dec <$> B.readFile fp
 
 -- | Read a DTA (text) from a handle.
-hReadDTA :: Handle -> IO DTA
-hReadDTA = fmap (pDTA . L.scan) . hGetContents
+hReadDTA :: (B.ByteString -> T.Text) -> Handle -> IO DTA
+hReadDTA dec h = pDTA . L.scan . T.unpack . dec <$> B.hGetContents h
 
 showPn :: L.AlexPosn -> String
 showPn (L.AlexPn _ l c) = show l ++ " line, " ++ show c ++ " column"

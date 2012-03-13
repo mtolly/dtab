@@ -46,7 +46,7 @@ withHandleOut fp  f = withFile fp WriteMode f
 
 printUsage :: IO ()
 printUsage = mapM_ putStrLn
-  [ "dtab v0.6, by onyxite. Built on earlier work by xorloser and deimos."
+  [ "dtab v0.7, by onyxite. Built on earlier work by xorloser and deimos."
   , "Usage: dtab mode file-in file-out [encrypt-key]"
   , "Modes: -a converts DTB (binary) to DTA (text), latin-1 encoding"
   , "       -b converts DTA (text) to DTB (binary), latin-1 encoding"

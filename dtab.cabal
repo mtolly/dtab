@@ -1,5 +1,5 @@
 Name:               dtab
-Version:            0.6
+Version:            0.7
 Description:        Read and write the Harmonix DTA/DTB metadata format, used in
                     the Karaoke Revolution, Guitar Hero, and Rock Band games.
 License:            GPL

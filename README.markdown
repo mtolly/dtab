@@ -10,12 +10,17 @@ Version 0.1: initial version.
 
 Version 0.5: all basic functionality.
 
-* done: encrypt+decrypt (old+new crypt), dta2dtb, dtb2dta.
-* done: support reading/writing from both files and stdio.
-* todo: extensive testing on dta/dtb corpus.
-* todo: verify encoding support (utf-8? latin-1?)
-* todo: modify dta lexer & parser to print source locations in errors.
-* todo: verify characters permissible in raw keywords.
-  maybe, just allow any chars which aren't parsed as something else?
+* Done: encrypt+decrypt (old+new crypt), dta2dtb, dtb2dta.
+* Done: support reading/writing from both files and stdio.
+* Todo: extensive testing on dta/dtb corpus.
+* Todo: proper encoding support (UTF-8? Latin-1?)
+* Todo: modify dta lexer & parser to print source locations in errors.
+* Todo: verify characters permissible in raw keywords.
+  Maybe, just allow any characters which aren't parsed as something else?
 
 Version 0.6: lexer & parser now print source locations.
+
+Version 0.7: supports decoding/encoding for both UTF-8 and Latin-1.
+
+* Todo: write a new lexer and pretty-printer which work with Text instead of
+  String.

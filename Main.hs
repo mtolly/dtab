@@ -17,7 +17,7 @@ decodeLatin1 = T.pack . B8.unpack
 encodeLatin1 :: T.Text -> B8.ByteString
 encodeLatin1 = B8.pack . T.unpack
 
-main = getArgs >>= \args -> do
+main = getArgs >>= \args ->
   case args of
     (mode : fin : fout : rest) ->
       withHandleIn fin $ \hin ->

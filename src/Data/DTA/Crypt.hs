@@ -1,8 +1,10 @@
+-- | The encryption scheme used for DTB files found on game discs.
 module Data.DTA.Crypt
 ( oldCrypt, newCrypt
 , decrypt, encrypt
 , decryptFile, encryptFile
 , hDecrypt, hEncrypt
+, Key, Crypt
 ) where
 
 import Data.Word
@@ -19,20 +21,23 @@ import Control.Monad.ST.Lazy
 import Data.STRef.Lazy
 import Data.Array.ST
 
+-- | An encryption/decryption key.
 type Key = Word32
+
+-- | Using a key to generate an infinite stream of crypt bytes.
 type Crypt = Key -> [Word8]
 
 {- |
 The way both the new and old DTB encryption algorithms work is by using the key
 to generate a stream of bytes. Each of these bytes is then XOR'd with the
 corresponding bytes in the source file. The same algorithm is both the
-decryption and encryption; this is because (A xor B) xor B == A.
+decryption and encryption; this is because @(A xor B) xor B == A@.
 -}
 crypt :: Crypt -> Key -> BL.ByteString -> BL.ByteString
 crypt cry key = BL.pack . zipWith xor (cry key) . BL.unpack
 
--- Take the first four bytes of the string as the key, and decrypt the rest of
--- the file.
+{- | Take the first four bytes of the string as the key, and decrypt the rest of
+     the file. -}
 decrypt :: Crypt -> BL.ByteString -> BL.ByteString
 decrypt cry = runGet $ liftM2 (crypt cry) getWord32le getRemainingLazyByteString
 
@@ -49,9 +54,11 @@ decryptFile cry fi fo = BL.readFile fi >>= BL.writeFile fo . decrypt cry
 encryptFile :: Crypt -> Key -> FilePath -> FilePath -> IO ()
 encryptFile cry key fi fo = BL.readFile fi >>= BL.writeFile fo . encrypt cry key
 
+-- | Decrypt an encrypted DTB file across two handles.
 hDecrypt :: Crypt -> Handle -> Handle -> IO ()
 hDecrypt cry hi ho = BL.hGetContents hi >>= BL.hPutStr ho . decrypt cry
 
+-- | Encrypt an unencrypted DTB files across two handles.
 hEncrypt :: Crypt -> Key -> Handle -> Handle -> IO ()
 hEncrypt cry key hi ho = BL.hGetContents hi >>= BL.hPutStr ho . encrypt cry key
 

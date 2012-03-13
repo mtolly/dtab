@@ -1,3 +1,4 @@
+-- | The token parser for text \".dta\" files.
 module Data.DTA.Parse (pDTA, readDTA, hReadDTA) where
 
 import Data.DTA

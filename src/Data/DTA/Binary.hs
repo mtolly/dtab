@@ -1,4 +1,4 @@
--- | Reading/writing binary DTB files, using Data.Binary.
+-- | Reading/writing binary \".dtb\" files, using Data.Binary.
 module Data.DTA.Binary where
 
 import Data.DTA
@@ -17,7 +17,10 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class
 import Control.Applicative
 
+-- | A wrapper to decode strings inside binary files.
 type DecodeGet a = ReaderT (B.ByteString -> T.Text) Get a
+
+-- | A wrapper to encode strings to binary files.
 type EncodePut = ReaderT (T.Text -> B.ByteString) PutM ()
 
 -- | Read a DTB (binary) file.

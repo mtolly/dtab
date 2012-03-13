@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{- | The Harmonix DTA/DTB metadata file format, used in the Karaoke Revolution,
-     Guitar Hero, and Rock Band video game series. -}
+-- | The basic tree types for DTA files.
 module Data.DTA where
 
 import Data.Int (Int32)
@@ -12,10 +11,6 @@ import Control.Monad.Trans.State
 
 import Data.Typeable
 import Data.Data
-
---
--- Basic types
---
 
 -- | A top-level file.
 data DTA = DTA { byte0 :: Word8, topTree :: Tree }

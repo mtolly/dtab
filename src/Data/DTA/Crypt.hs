@@ -36,8 +36,8 @@ decryption and encryption; this is because @(A xor B) xor B == A@.
 crypt :: Crypt -> Key -> BL.ByteString -> BL.ByteString
 crypt cry key = BL.pack . zipWith xor (cry key) . BL.unpack
 
-{- | Take the first four bytes of the string as the key, and decrypt the rest of
-     the file. -}
+-- | Take the first four bytes of the string as the key, and decrypt the rest of
+-- the file.
 decrypt :: Crypt -> BL.ByteString -> BL.ByteString
 decrypt cry = runGet $ liftM2 (crypt cry) getWord32le getRemainingLazyByteString
 
@@ -62,20 +62,20 @@ hDecrypt cry hi ho = BL.hGetContents hi >>= BL.hPutStr ho . decrypt cry
 hEncrypt :: Crypt -> Key -> Handle -> Handle -> IO ()
 hEncrypt cry key hi ho = BL.hGetContents hi >>= BL.hPutStr ho . encrypt cry key
 
---
 -- New (Rock Band) encryption
---
 
--- From xorloser's dtbcrypt:
--- unsigned int dtb_xor_x360(unsigned int data)
--- {
-  -- int val1 = (data / 0x1F31D) * 0xB14;
-  -- int val2 = (data - ((data / 0x1F31D) * 0x1F31D)) * 0x41A7;
-  -- val2 = val2 - val1;
-  -- if(val2 <= 0)
-    -- val2 += 0x7FFFFFFF;
-  -- return val2;
--- }
+{-
+From xorloser's dtbcrypt:
+unsigned int dtb_xor_x360(unsigned int data)
+{
+  int val1 = (data / 0x1F31D) * 0xB14;
+  int val2 = (data - ((data / 0x1F31D) * 0x1F31D)) * 0x41A7;
+  val2 = val2 - val1;
+  if(val2 <= 0)
+    val2 += 0x7FFFFFFF;
+  return val2;
+}
+-}
 
 -- | The key iteration function for new DTB encryption/decryption.
 dtbXor360 :: Word32 -> Word32
@@ -88,11 +88,9 @@ dtbXor360 d = let
 newCrypt :: Crypt
 newCrypt key = fmap fromIntegral $ tail $ iterate dtbXor360 key
 
---
 -- Old (PS2 Guitar Hero) encryption
 -- This algorithm uses a large table to produce the XOR bytes, which is
 -- implemented using an STArray in the lazy ST monad.
---
 
 data CryptTable s = CryptTable
   { idx1  :: STRef s Word8
@@ -119,8 +117,8 @@ oldNext (CryptTable { idx1 = i1ref, idx2 = i2ref, table = tbl }) = do
   writeArray tbl i1 next
   writeSTRef i1ref $ if i1 == 0xF8 then 0 else i1 + 1
   writeSTRef i2ref $ if i2 == 0xF8 then 0 else i2 + 1
-  return $ fromIntegral next -- The fromIntegral chops each Word32 down to a
-                             -- Word8 (taking only the least significant byte).
+  return $ fromIntegral next
+  -- The fromIntegral chops each Word32 down to the least significant byte.
 
 -- | The lazy infinite list of crypt bytes for old-style encryption.
 oldCrypt :: Crypt

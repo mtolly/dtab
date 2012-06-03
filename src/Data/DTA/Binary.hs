@@ -41,8 +41,8 @@ putTree (Tree nid chks) = do
   putWord32le nid
   mapM_ putChunk chks
 
-{- | Chunk format: 4-byte chunk type identifier, followed by at least 4 bytes
-     of chunk-specific data. -}
+-- | Chunk format: 4-byte chunk type identifier, followed by at least 4 bytes
+-- of chunk-specific data.
 putChunk :: Chunk -> Put
 putChunk c = case c of
   Int i       -> putWord32le 0x0  >> putWord32le (fromIntegral i)

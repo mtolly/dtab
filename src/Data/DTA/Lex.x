@@ -79,7 +79,7 @@ data Token
   | IfNDef
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
--- Reads a single-quoted string, by converting it to a double-quoted one.
+-- | Reads a single-quoted string, by converting it to a double-quoted one.
 getKeyword :: String -> String
 getKeyword = read . go where
   go ('\'':xs) = '"' : go xs        -- string begin/end -> double-quote

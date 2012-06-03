@@ -7,8 +7,6 @@ import Data.DTA.Parse as ReadDTA
 import Data.DTA.Crypt
 import System.Environment
 import System.IO
-import Data.Text.Encoding
-import qualified Data.Text as T
 
 main = getArgs >>= \args ->
   case args of

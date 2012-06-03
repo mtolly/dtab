@@ -68,7 +68,7 @@ fromHandle h = do
   parse . L.scan <$> hGetContents h
 
 fromFile :: FilePath -> IO DTA
-fromFile fp = withFile fp ReadMode fromHandle
+fromFile fp = openFile fp ReadMode >>= fromHandle
 
 -- | If instead of this error, "Internal Happy error" is sometimes printed, make
 -- sure you are using Happy 1.18.7 or later.

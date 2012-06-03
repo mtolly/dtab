@@ -1,13 +1,13 @@
 Name:               dtab
 Version:            0.8
-Description:        Read and write the Harmonix DTA/DTB metadata format, used in
-                    the Karaoke Revolution, Guitar Hero, and Rock Band games.
+Synopsis:           Harmonix (Guitar Hero, Rock Band) DTA/DTB metadata library.
 License:            GPL
 License-file:       LICENSE
 Author:             Michael Tolly
 Maintainer:         tolly@wisc.edu
 Build-Type:         Simple
 Cabal-version:      >= 1.8
+Category:           Data
 
 Library
   Build-Depends:      base, bytestring, transformers, data-binary-ieee754,
@@ -24,3 +24,7 @@ Library
 Executable dtab
   Build-Depends:      base, dtab, bytestring
   Main-Is:            Main.hs
+
+Source-Repository head
+  Type:               git
+  Location:           git://github.com/onyxite/dtab.git

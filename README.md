@@ -24,3 +24,12 @@ Version 0.7: supports decoding/encoding for both UTF-8 and Latin-1.
 
 * Todo: write a new lexer and pretty-printer which work with Text instead of
   String.
+
+Version 0.8:
+
+* Removed UTF-8 support. This doesn't actually exist; all Harmonix DTA files are
+in Latin-1.
+* Removed all usage of Data.Text. Because all strings are Latin-1, they are now
+simply stored as ByteStrings.
+* New parser using Happy. Make sure to use at least Happy v1.18.7; this version
+fixed a bug involving partial parse errors.

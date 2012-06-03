@@ -1,31 +1,22 @@
 -- | dtab application with two functions: binary <-> text, and decrypt/encrypt.
 module Main where
 
-import Data.DTA.Binary
-import Data.DTA.PrettyPrint
-import Data.DTA.Parse
+import Data.DTA.Binary as DTB
+import Data.DTA.PrettyPrint as ShowDTA
+import Data.DTA.Parse as ReadDTA
 import Data.DTA.Crypt
 import System.Environment
 import System.IO
 import Data.Text.Encoding
-import qualified Data.ByteString.Char8 as B8
 import qualified Data.Text as T
-
-decodeLatin1 :: B8.ByteString -> T.Text
-decodeLatin1 = T.pack . B8.unpack
-
-encodeLatin1 :: T.Text -> B8.ByteString
-encodeLatin1 = B8.pack . T.unpack
 
 main = getArgs >>= \args ->
   case args of
     (mode : fin : fout : rest) ->
       withHandleIn fin $ \hin ->
         withHandleOut fout $ \hout -> case mode of
-          "-a" -> hReadDTB decodeLatin1 hin >>= hWriteDTA encodeLatin1 hout
-          "-b" -> hReadDTA decodeLatin1 hin >>= hWriteDTB encodeLatin1 hout
-          "-A" -> hReadDTB decodeUtf8 hin >>= hWriteDTA encodeUtf8 hout
-          "-B" -> hReadDTA decodeUtf8 hin >>= hWriteDTB encodeUtf8 hout
+          "-a" -> DTB.fromHandle hin >>= ShowDTA.toHandle hout
+          "-b" -> ReadDTA.fromHandle hin >>= DTB.toHandle hout
           "-d" -> hDecrypt newCrypt hin hout
           "-e" -> hEncrypt newCrypt key hin hout
           "-D" -> hDecrypt oldCrypt hin hout
@@ -46,12 +37,10 @@ withHandleOut fp  f = withFile fp WriteMode f
 
 printUsage :: IO ()
 printUsage = mapM_ putStrLn
-  [ "dtab v0.7, by onyxite. Built on earlier work by xorloser and deimos."
+  [ "dtab v0.8, by onyxite. Built on earlier work by xorloser and deimos."
   , "Usage: dtab mode file-in file-out [encrypt-key]"
-  , "Modes: -a converts DTB (binary) to DTA (text), latin-1 encoding"
-  , "       -b converts DTA (text) to DTB (binary), latin-1 encoding"
-  , "       -A converts DTB (binary) to DTA (text), utf-8 encoding"
-  , "       -B converts DTA (text) to DTB (binary), utf-8 encoding"
+  , "Modes: -a converts DTB (binary) to DTA (text)"
+  , "       -b converts DTA (text) to DTB (binary)"
   , "       -d decrypts new-style DTB"
   , "       -e encrypts new-style DTB, with optional key"
   , "       -D decrypts old-style DTB"

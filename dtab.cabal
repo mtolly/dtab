@@ -1,5 +1,5 @@
 Name:               dtab
-Version:            0.7
+Version:            0.8
 Description:        Read and write the Harmonix DTA/DTB metadata format, used in
                     the Karaoke Revolution, Guitar Hero, and Rock Band games.
 License:            GPL
@@ -10,8 +10,8 @@ Build-Type:         Simple
 Cabal-version:      >= 1.8
 
 Library
-  Build-Depends:      base, bytestring, text, transformers,
-                      data-binary-ieee754, binary, array, pretty
+  Build-Depends:      base, bytestring, transformers, data-binary-ieee754,
+                      binary, array, pretty
   Exposed-modules:    Data.DTA
                       Data.DTA.Binary
                       Data.DTA.PrettyPrint
@@ -22,5 +22,5 @@ Library
   ghc-options:        -Wall
 
 Executable dtab
-  Build-Depends:      base, dtab, text, bytestring
+  Build-Depends:      base, dtab, bytestring
   Main-Is:            Main.hs

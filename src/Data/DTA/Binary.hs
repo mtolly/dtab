@@ -10,98 +10,87 @@ import System.IO (Handle)
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Text as T
 
 import Control.Monad (replicateM)
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Class
 import Control.Applicative
 
--- | A wrapper to decode strings inside binary files.
-type DecodeGet a = ReaderT (B.ByteString -> T.Text) Get a
-
--- | A wrapper to encode strings to binary files.
-type EncodePut = ReaderT (T.Text -> B.ByteString) PutM ()
-
 -- | Read a DTB (binary) file.
-readDTB :: (B.ByteString -> T.Text) -> FilePath -> IO DTA
-readDTB dec fp = runGet (runReaderT getDTA dec) <$> BL.readFile fp
+fromFile :: FilePath -> IO DTA
+fromFile fp = runGet getDTA <$> BL.readFile fp
 
 -- | Write a DTA file as DTB (binary).
-writeDTB :: (T.Text -> B.ByteString) -> FilePath -> DTA -> IO ()
-writeDTB enc fp dta = BL.writeFile fp $ runPut $ runReaderT (putDTA dta) enc
+toFile :: FilePath -> DTA -> IO ()
+toFile fp dta = BL.writeFile fp $ runPut $ putDTA dta
 
 -- | Read a DTB (binary) file from a handle.
-hReadDTB :: (B.ByteString -> T.Text) -> Handle -> IO DTA
-hReadDTB dec h = runGet (runReaderT getDTA dec) <$> BL.hGetContents h
+fromHandle :: Handle -> IO DTA
+fromHandle h = runGet getDTA <$> BL.hGetContents h
 
 -- | Write a DTA file as DTB (binary) to a handle.
-hWriteDTB :: (T.Text -> B.ByteString) -> Handle -> DTA -> IO ()
-hWriteDTB enc h dta = BL.hPutStr h $ runPut $ runReaderT (putDTA dta) enc
+toHandle :: Handle -> DTA -> IO ()
+toHandle h dta = BL.hPut h $ runPut $ putDTA dta
 
 -- | DTA format: a single unknown-purpose byte, followed by a tree.
-putDTA :: DTA -> EncodePut
-putDTA (DTA b t) = lift (put b) >> putTree t
+putDTA :: DTA -> Put
+putDTA (DTA b t) = put b >> putTree t
 
 -- | Tree format: 2-byte length, 4-byte node ID, then each element in sequence.
-putTree :: Tree -> EncodePut
+putTree :: Tree -> Put
 putTree (Tree nid chks) = do
-  lift $ putWord16le $ fromIntegral $ length chks
-  lift $ putWord32le nid
+  putWord16le $ fromIntegral $ length chks
+  putWord32le nid
   mapM_ putChunk chks
 
 {- | Chunk format: 4-byte chunk type identifier, followed by at least 4 bytes
      of chunk-specific data. -}
-putChunk :: Chunk -> EncodePut
+putChunk :: Chunk -> Put
 putChunk c = case c of
-  Int i       -> lift $ putWord32le 0x0  >> putWord32le (fromIntegral i)
-  Float f     -> lift $ putWord32le 0x1  >> putFloat32le f
-  Var t       -> lift (putWord32le 0x2) >> putLenText t
-  Key t       -> lift (putWord32le 0x5)  >> putLenText t
-  Unhandled   -> lift $ putWord32le 0x6  >> putWord32le 0
-  IfDef t     -> lift (putWord32le 0x7)  >> putLenText t
-  Else        -> lift $ putWord32le 0x8  >> putWord32le 0
-  EndIf       -> lift $ putWord32le 0x9  >> putWord32le 0
-  Parens tr   -> lift (putWord32le 0x10) >> putTree tr
-  Braces tr   -> lift (putWord32le 0x11) >> putTree tr
-  String t    -> lift (putWord32le 0x12) >> putLenText t
-  Brackets tr -> lift (putWord32le 0x13) >> putTree tr
-  Define t    -> lift (putWord32le 0x20) >> putLenText t
-  Include t   -> lift (putWord32le 0x21) >> putLenText t
-  Merge t     -> lift (putWord32le 0x22) >> putLenText t
-  IfNDef t    -> lift (putWord32le 0x23) >> putLenText t
+  Int i       -> putWord32le 0x0  >> putWord32le (fromIntegral i)
+  Float f     -> putWord32le 0x1  >> putFloat32le f
+  Var b       -> putWord32le 0x2  >> putLenStr b
+  Key b       -> putWord32le 0x5  >> putLenStr b
+  Unhandled   -> putWord32le 0x6  >> putWord32le 0
+  IfDef b     -> putWord32le 0x7  >> putLenStr b
+  Else        -> putWord32le 0x8  >> putWord32le 0
+  EndIf       -> putWord32le 0x9  >> putWord32le 0
+  Parens tr   -> putWord32le 0x10 >> putTree tr
+  Braces tr   -> putWord32le 0x11 >> putTree tr
+  String b    -> putWord32le 0x12 >> putLenStr b
+  Brackets tr -> putWord32le 0x13 >> putTree tr
+  Define b    -> putWord32le 0x20 >> putLenStr b
+  Include b   -> putWord32le 0x21 >> putLenStr b
+  Merge b     -> putWord32le 0x22 >> putLenStr b
+  IfNDef b    -> putWord32le 0x23 >> putLenStr b
 
 -- | String format: 4-byte length, followed by the string.
-putLenText :: T.Text -> EncodePut
-putLenText t = do
-  enc <- ask
-  let b = enc t
-  lift $ putWord32le (fromIntegral $ B.length b) >> putByteString b
+putLenStr :: B.ByteString -> Put
+putLenStr b = do
+  putWord32le $ fromIntegral $ B.length b
+  putByteString b
 
 -- | String format: 4-byte length, followed by the string.
-getLenText :: DecodeGet T.Text
-getLenText = do
-  dec <- ask
-  fmap dec $ lift $ getWord32le >>= getBytes . fromIntegral
+getLenText :: Get B.ByteString
+getLenText = getWord32le >>= getBytes . fromIntegral
 
 -- | Tree format: 2-byte length, 4-byte node ID, then each element in sequence.
-getTree :: DecodeGet Tree
+getTree :: Get Tree
 getTree = do
-  len <- lift getWord16le
-  liftA2 Tree (lift getWord32le) $ replicateM (fromIntegral len) getChunk
+  len <- getWord16le
+  nid <- getWord32le
+  Tree nid <$> replicateM (fromIntegral len) getChunk
 
-{- | Chunk format: 4-byte chunk type identifier, followed by at least 4 bytes
-     of chunk-specific data. -}
-getChunk :: DecodeGet Chunk
-getChunk = lift getWord32le >>= \cid -> case cid of
-  0x0  -> lift $ Int . fromIntegral <$> getWord32le
-  0x1  -> lift $ Float <$> getFloat32le
+-- | Chunk format: 4-byte chunk type identifier, followed by at least 4 bytes
+-- of chunk-specific data.
+getChunk :: Get Chunk
+getChunk = getWord32le >>= \cid -> case cid of
+  0x0  -> Int . fromIntegral <$> getWord32le
+  0x1  -> Float <$> getFloat32le
   0x2  -> Var <$> getLenText
   0x5  -> Key <$> getLenText
-  0x6  -> lift $ skip 4 >> return Unhandled
+  0x6  -> skip 4 >> return Unhandled
   0x7  -> IfDef <$> getLenText
-  0x8  -> lift $ skip 4 >> return Else
-  0x9  -> lift $ skip 4 >> return EndIf
+  0x8  -> skip 4 >> return Else
+  0x9  -> skip 4 >> return EndIf
   0x10 -> Parens <$> getTree
   0x11 -> Braces <$> getTree
   0x12 -> String <$> getLenText
@@ -113,5 +102,5 @@ getChunk = lift getWord32le >>= \cid -> case cid of
   _    -> fail $ "Unidentified DTB chunk with ID " ++ show cid
 
 -- | DTA format: a single unknown-purpose byte, followed by a tree.
-getDTA :: DecodeGet DTA
-getDTA = liftA2 DTA (lift getWord8) getTree
+getDTA :: Get DTA
+getDTA = liftA2 DTA getWord8 getTree

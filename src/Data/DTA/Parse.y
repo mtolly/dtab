@@ -68,9 +68,11 @@ fromString = parse . L.scan
 fromByteString :: B8.ByteString -> DTA
 fromByteString = fromString . B8.unpack
 
+-- | The remaining data from the handle is read strictly, in binary mode.
 fromHandle :: Handle -> IO DTA
 fromHandle h = fromByteString <$> B8.hGetContents h
 
+-- | The file is read strictly, in binary mode.
 fromFile :: FilePath -> IO DTA
 fromFile fp = withFile fp ReadMode fromHandle
 

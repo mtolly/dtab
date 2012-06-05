@@ -5,6 +5,7 @@ import Data.DTA
 import Text.PrettyPrint.HughesPJ
 import System.IO
 import qualified Data.ByteString.Char8 as B8
+import Data.Char (showLitChar)
 
 ppChunk :: Chunk -> Doc
 ppChunk c = case c of
@@ -33,11 +34,11 @@ ppTree (Tree _ chks) = case chks of
   (x : xt@(_ : _ : _)) -> vcat [ppChunk x, nest 2 $ vcat $ map ppChunk xt]
   _ -> hsep $ map ppChunk chks
 
+-- | Produces a single-quoted string literal.
 ppKey :: String -> Doc
-ppKey str = text $ "'" ++ concatMap escape str ++ "'"
-  where escape '\'' = "\\'"
-        escape '\\' = "\\\\"
-        escape c    = [c]
+ppKey str = text $ "'" ++ concatMap escape str ++ "'" where
+  escape '\'' = "\\'"
+  escape c = showLitChar c ""
 
 ppDTA :: DTA -> Doc
 ppDTA = vcat . map ppChunk . treeChunks . topTree

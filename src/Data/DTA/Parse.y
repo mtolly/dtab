@@ -1,11 +1,12 @@
 {
 -- | L.Token parser for text @.dta@ files.
-module Data.DTA.Parse (parse, fromFile, fromHandle) where
+module Data.DTA.Parse (parse, fromString, fromByteString, fromFile, fromHandle) where
 
 import Data.DTA
 import qualified Data.DTA.Lex as L
 import System.IO
 import Control.Applicative
+import qualified Data.ByteString.Char8 as B8
 }
 
 %name parse
@@ -61,14 +62,17 @@ Chunk : int { Int $1 }
 
 {
 
--- | The handle is set to Latin-1 encoding, which all DTA files are in.
+fromString :: String -> DTA
+fromString = parse . L.scan
+
+fromByteString :: B8.ByteString -> DTA
+fromByteString = fromString . B8.unpack
+
 fromHandle :: Handle -> IO DTA
-fromHandle h = do
-  hSetEncoding h latin1
-  parse . L.scan <$> hGetContents h
+fromHandle h = fromByteString <$> B8.hGetContents h
 
 fromFile :: FilePath -> IO DTA
-fromFile fp = openFile fp ReadMode >>= fromHandle
+fromFile fp = withFile fp ReadMode fromHandle
 
 -- | If instead of this error, "Internal Happy error" is sometimes printed, make
 -- sure you are using Happy 1.18.7 or later.

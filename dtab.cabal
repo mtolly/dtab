@@ -7,7 +7,8 @@ Description:        The DTA/DTB format is an internal metadata format used by
                     library provides read/write functions for both the binary
                     (DTB) and plain text (DTA) versions of the format, as well
                     as the encryption algorithm used for DTB files found on game
-                    discs.
+                    discs. Also included is an executable which accomplishes the
+                    same functions.
 License:            GPL
 License-file:       LICENSE
 Author:             Michael Tolly

@@ -1,5 +1,5 @@
 -- | Showing DTA files as text, using the HughesPJ pretty printer.
-module Data.DTA.PrettyPrint where
+module Data.DTA.PrettyPrint (toByteString, toString, toHandle, toFile) where
 
 import Data.DTA
 import Text.PrettyPrint.HughesPJ
@@ -42,10 +42,14 @@ ppKey str = text $ "'" ++ concatMap escape str ++ "'"
 ppDTA :: DTA -> Doc
 ppDTA = vcat . map ppChunk . treeChunks . topTree
 
+toString :: DTA -> String
+toString = render . ppDTA
+
+toByteString :: DTA -> B8.ByteString
+toByteString = B8.pack . toString
+
 toHandle :: Handle -> DTA -> IO ()
-toHandle h dta = do
-  hSetEncoding h latin1
-  hPutStr h $ render $ ppDTA dta
+toHandle h = B8.hPutStr h . toByteString
 
 toFile :: FilePath -> DTA -> IO ()
 toFile fp dta = withFile fp WriteMode $ \h -> toHandle h dta

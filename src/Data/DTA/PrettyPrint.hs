@@ -27,12 +27,19 @@ ppChunk c = case c of
   IfNDef t -> hsep [text "#ifndef", ppText t]
   where ppText = text . B8.unpack
 
--- | If the tree has more than 2 elements, all elements after the first get
--- their own indented lines.
+-- | Automatically chooses between horizontal and vertical arrangements,
+-- depending on what kind of chunks are in the tree.
 ppTree :: Tree -> Doc
-ppTree (Tree _ chks) = case chks of
-  (x : xt@(_ : _ : _)) -> vcat [ppChunk x, nest 2 $ vcat $ map ppChunk xt]
-  _ -> hsep $ map ppChunk chks
+ppTree (Tree _ chks) = if all simpleChunk chks
+  then hsep $ map ppChunk chks
+  else vcat $ map ppChunk chks
+  where simpleChunk c = case c of
+          Int _ -> True
+          Float _ -> True
+          Var _ -> True
+          Key _ -> True
+          Unhandled -> True
+          _ -> False
 
 -- | Produces a single-quoted string literal.
 ppKey :: String -> Doc

@@ -3,7 +3,7 @@ module Data.DTA.Crypt
 ( oldCrypt, newCrypt
 , decrypt, encrypt
 , decryptFile, encryptFile
-, hDecrypt, hEncrypt
+, decryptHandle, encryptHandle
 , Key, Crypt
 ) where
 
@@ -55,12 +55,12 @@ encryptFile :: Crypt -> Key -> FilePath -> FilePath -> IO ()
 encryptFile cry key fi fo = BL.readFile fi >>= BL.writeFile fo . encrypt cry key
 
 -- | Decrypt an encrypted DTB file across two handles.
-hDecrypt :: Crypt -> Handle -> Handle -> IO ()
-hDecrypt cry hi ho = BL.hGetContents hi >>= BL.hPutStr ho . decrypt cry
+decryptHandle :: Crypt -> Handle -> Handle -> IO ()
+decryptHandle cry hi ho = BL.hGetContents hi >>= BL.hPutStr ho . decrypt cry
 
 -- | Encrypt an unencrypted DTB files across two handles.
-hEncrypt :: Crypt -> Key -> Handle -> Handle -> IO ()
-hEncrypt cry key hi ho = BL.hGetContents hi >>= BL.hPutStr ho . encrypt cry key
+encryptHandle :: Crypt -> Key -> Handle -> Handle -> IO ()
+encryptHandle cry key hi ho = BL.hGetContents hi >>= BL.hPutStr ho . encrypt cry key
 
 -- New (Rock Band) encryption
 

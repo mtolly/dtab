@@ -1,4 +1,4 @@
--- | Showing DTA files as text, using the HughesPJ pretty printer.
+-- | Pretty-print text (DTA) files.
 module Data.DTA.PrettyPrint (toByteString, toString, toHandle, toFile) where
 
 import Data.DTA

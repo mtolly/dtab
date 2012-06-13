@@ -15,10 +15,10 @@ main = getArgs >>= \args ->
         withHandleOut fout $ \hout -> case mode of
           "-a" -> DTB.fromHandle hin >>= ShowDTA.toHandle hout
           "-b" -> ReadDTA.fromHandle hin >>= DTB.toHandle hout
-          "-d" -> hDecrypt newCrypt hin hout
-          "-e" -> hEncrypt newCrypt key hin hout
-          "-D" -> hDecrypt oldCrypt hin hout
-          "-E" -> hEncrypt newCrypt key hin hout
+          "-d" -> decryptHandle newCrypt hin hout
+          "-e" -> encryptHandle newCrypt key hin hout
+          "-D" -> decryptHandle oldCrypt hin hout
+          "-E" -> encryptHandle newCrypt key hin hout
           _ -> printUsage
           where key = case rest of
                   (str:_) -> read str

@@ -1,9 +1,9 @@
 -- | dtab application with two functions: binary <-> text, and decrypt/encrypt.
 module Main where
 
-import Data.DTA.Binary as DTB
-import Data.DTA.PrettyPrint as ShowDTA
-import Data.DTA.Parse as ReadDTA
+import Data.DTA
+import qualified Data.DTA.PrettyPrint as DTA
+import qualified Data.DTA.Parse as DTA
 import Data.DTA.Crypt
 import System.Environment
 import System.IO
@@ -13,8 +13,8 @@ main = getArgs >>= \args ->
     (mode : fin : fout : rest) ->
       withHandleIn fin $ \hin ->
         withHandleOut fout $ \hout -> case mode of
-          "-a" -> DTB.fromHandle hin >>= ShowDTA.toHandle hout
-          "-b" -> ReadDTA.fromHandle hin >>= DTB.toHandle hout
+          "-a" -> fromHandle hin >>= DTA.toHandle hout
+          "-b" -> DTA.fromHandle hin >>= toHandle hout
           "-d" -> decryptHandle newCrypt hin hout
           "-e" -> encryptHandle newCrypt key hin hout
           "-D" -> decryptHandle oldCrypt hin hout

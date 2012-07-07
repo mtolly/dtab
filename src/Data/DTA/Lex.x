@@ -1,4 +1,5 @@
 {
+-- | Generated lexer for text @.dta@ files.
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -w #-}
 module Data.DTA.Lex (scan, Token(..), AlexPosn(..)) where

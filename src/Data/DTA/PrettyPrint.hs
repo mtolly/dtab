@@ -1,7 +1,7 @@
--- | Pretty-print text (DTA) files.
+-- | Pretty-print text (DTA) files with the HughesPJ library.
 module Data.DTA.PrettyPrint (toByteString, toString, toHandle, toFile) where
 
-import Data.DTA
+import Data.DTA hiding (toFile, toHandle)
 import Text.PrettyPrint.HughesPJ
 import System.IO
 import qualified Data.ByteString.Char8 as B8
@@ -30,9 +30,9 @@ ppChunk c = case c of
 -- | Automatically chooses between horizontal and vertical arrangements,
 -- depending on what kind of chunks are in the tree.
 ppTree :: Tree -> Doc
-ppTree (Tree _ chks) = if all simpleChunk chks
-  then hsep $ map ppChunk chks
-  else vcat $ map ppChunk chks
+ppTree (Tree _ chks)
+  | all simpleChunk chks = hsep $ map ppChunk chks
+  | otherwise            = vcat $ map ppChunk chks
   where simpleChunk c = case c of
           Int _ -> True
           Float _ -> True

@@ -1,8 +1,8 @@
 {
--- | L.Token parser for text @.dta@ files.
+-- | Generated parser for text @.dta@ files.
 module Data.DTA.Parse (parse, fromString, fromByteString, fromFile, fromHandle) where
 
-import Data.DTA
+import Data.DTA hiding (fromFile, fromHandle)
 import qualified Data.DTA.Lex as L
 import System.IO
 import Control.Applicative

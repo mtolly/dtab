@@ -1,6 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
--- | The basic tree types for DTA files.
-module Data.DTA where
+-- | The data structures for DTA files, plus binary (DTB) serialization.
+module Data.DTA
+( DTA(..), Tree(..), Chunk(..)
+, fromFile, fromHandle, toFile, toHandle
+, renumberFrom
+) where
 
 import Data.Int (Int32)
 -- import Data.Word (Word8, Word32)
@@ -11,6 +15,7 @@ import Control.Applicative
 
 import Data.Typeable
 import Data.Data
+import Test.QuickCheck
 
 import Data.Binary
 import Data.Binary.Put
@@ -19,7 +24,6 @@ import Data.Binary.IEEE754 (putFloat32le, getFloat32le)
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-
 import System.IO
 
 --
@@ -120,21 +124,6 @@ putLenStr b = putWord32le (fromIntegral $ B.length b) >> putByteString b
 getLenStr :: Get B.ByteString
 getLenStr = getWord32le >>= getBytes . fromIntegral
 
--- | Assign new sequential node IDs to each tree in a DTA, starting with the
--- top-level tree.
-renumberFrom :: Word32 -> DTA -> DTA
-renumberFrom w (DTA b t) = DTA b $ S.evalState (renumberTree t) w where
-  renumberTree :: Tree -> S.State Word32 Tree
-  renumberTree (Tree _ sub) = liftA2 Tree S.get $
-    S.modify (+ 1) >> mapM renumberChunk sub
-  renumberChunk :: Chunk -> S.State Word32 Chunk
-  renumberChunk c = case c of
-    Parens tr -> Parens <$> renumberTree tr
-    Braces tr -> Braces <$> renumberTree tr
-    Brackets tr -> Brackets <$> renumberTree tr
-    _ -> return c
-  -- alternately, with uniplate: renumberChunk = descendBiM renumberTree
-
 -- | Read a binary (DTB) file, strictly.
 fromFile :: FilePath -> IO DTA
 fromFile fp = withFile fp ReadMode fromHandle
@@ -152,3 +141,67 @@ toFile fp dta = withFile fp WriteMode $ \h -> toHandle h dta
 toHandle :: Handle -> DTA -> IO ()
 toHandle h dta = B.hPutStr h $ lazyToStrict $ encode dta
   where lazyToStrict = B.concat . BL.toChunks
+
+--
+-- QuickCheck testing instances
+--
+
+arbByteString :: Gen B.ByteString
+arbByteString = B.pack <$> arbitrary
+
+-- | Generates a tree which may have subtrees up to the given depth.
+arbTree :: Int -> Gen Tree
+arbTree n = liftA2 Tree arbitrary $ listOf $ arbChunk n
+
+-- | Generates a chunk which may have subtrees up to the given depth.
+arbChunk :: Int -> Gen Chunk
+arbChunk 0 = arbLeaf
+arbChunk n = frequency
+  [ (1, elements [Parens, Braces, Brackets] <*> arbTree (n - 1))
+  , (10, arbLeaf) ]
+
+-- | Generates a chunk which is not a subtree.
+arbLeaf :: Gen Chunk
+arbLeaf = oneof
+  [ Int <$> arbitrary
+  , Float <$> arbitrary
+  --, Var <$> arbByteString
+  , Key <$> arbByteString
+  , return Unhandled
+  --, IfDef <$> arbByteString
+  , return Else
+  , return EndIf
+  , String <$> arbByteString
+  --, Define <$> arbByteString
+  --, Include <$> arbByteString
+  --, Merge <$> arbByteString
+  --, IfNDef <$> arbByteString
+  ]
+
+instance Arbitrary DTA where
+  arbitrary = liftA2 DTA arbitrary arbitrary
+
+instance Arbitrary Tree where
+  arbitrary = sized $ \n -> arbTree $ if n > 2 then 2 else n
+
+instance Arbitrary Chunk where
+  arbitrary = sized $ \n -> arbChunk $ if n > 2 then 2 else n
+
+--
+-- Misc. functions
+--
+
+-- | Assign new sequential node IDs to each tree in a DTA, starting with the
+-- top-level tree.
+renumberFrom :: Word32 -> DTA -> DTA
+renumberFrom w (DTA b t) = DTA b $ S.evalState (renumberTree t) w where
+  renumberTree :: Tree -> S.State Word32 Tree
+  renumberTree (Tree _ sub) = liftA2 Tree S.get $
+    S.modify (+ 1) >> mapM renumberChunk sub
+  renumberChunk :: Chunk -> S.State Word32 Chunk
+  renumberChunk c = case c of
+    Parens tr -> Parens <$> renumberTree tr
+    Braces tr -> Braces <$> renumberTree tr
+    Brackets tr -> Brackets <$> renumberTree tr
+    _ -> return c
+  -- alternately, with uniplate: renumberChunk = descendBiM renumberTree

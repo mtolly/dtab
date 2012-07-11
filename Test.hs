@@ -1,5 +1,5 @@
 ﻿-- | QuickCheck tests for the dtab library.
-module Data.DTA.Test where
+module Main where
 
 import Data.DTA
 import Data.Binary
@@ -8,6 +8,17 @@ import Data.DTA.PrettyPrint
 import Data.DTA.Crypt
 import qualified Data.ByteString.Lazy as BL
 import Test.QuickCheck
+
+main = do
+  runTest prop_binaryRoundTrip "binary round trip is equal"
+  runTest prop_textRoundTrip "text round trip is equal (disregarding nodeID)"
+  runTest prop_renumberEquiv "renumber doesn't change structure"
+  runTest prop_renumberEquiv "renumber once = renumber twice"
+  runTest prop_newCryptRoundTrip "new encryption round trip is equal"
+  runTest prop_oldCryptRoundTrip "old encryption round trip is equal"
+
+runTest :: (Testable a) => a -> String -> IO ()
+runTest x str = putStrLn ("Testing: " ++ str) >> quickCheck x
 
 newtype AnyLazy = AL { fromAL :: BL.ByteString }
   deriving (Eq, Ord, Show)

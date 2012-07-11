@@ -23,7 +23,7 @@ $white+ ;
 
 -- Numbers. Longest match rule means N.N is float, not int.
 \-? $digit+ { \pn str -> (pn, Int $ read str) }
-\-? $digit+ (\. $digit+)? ('e' $digit+)? { \pn str -> (pn, Float $ read str) }
+\-? $digit+ (\. $digit+)? (e \-? $digit+)? { \pn str -> (pn, Float $ read str) }
 
 -- Variable names.
 \$ ($alpha | $digit | _)+ { \pn str -> (pn, Var $ B8.pack $ tail str) }

@@ -5,7 +5,6 @@ import Data.DTA hiding (toFile, toHandle)
 import Text.PrettyPrint.HughesPJ
 import System.IO
 import qualified Data.ByteString.Char8 as B8
-import Data.Char (showLitChar)
 
 ppChunk :: Chunk -> Doc
 ppChunk c = case c of
@@ -43,9 +42,13 @@ ppTree (Tree _ chks)
 
 -- | Produces a single-quoted string literal.
 ppKey :: String -> Doc
-ppKey str = text $ "'" ++ concatMap escape str ++ "'" where
-  escape '\'' = "\\'"
-  escape c = showLitChar c ""
+ppKey = text . f . show where
+  -- simply convert a double-quoted string to single-quoted string
+  f "" = ""
+  f ('"':xs) = '\'' : f xs
+  f ('\'':xs) = '\\' : '\'' : f xs
+  f ('\\':x:xs) = '\\' : x : f xs
+  f (x:xs) = x : f xs
 
 ppDTA :: DTA -> Doc
 ppDTA = vcat . map ppChunk . treeChunks . topTree

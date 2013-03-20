@@ -13,7 +13,7 @@ main = do
   runTest prop_binaryRoundTrip "binary round trip is equal"
   runTest prop_textRoundTrip "text round trip is equal (disregarding nodeID)"
   runTest prop_renumberEquiv "renumber doesn't change structure"
-  runTest prop_renumberEquiv "renumber once = renumber twice"
+  runTest prop_renumberTwice "renumber once = renumber twice"
   runTest prop_newCryptRoundTrip "new encryption round trip is equal"
   runTest prop_oldCryptRoundTrip "old encryption round trip is equal"
 

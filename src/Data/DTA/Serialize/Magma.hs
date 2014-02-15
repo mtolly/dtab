@@ -82,7 +82,7 @@ instance ToChunks Gamedata where
     ]
 
 instance ToChunks Gender where
-  toChunks Male = [Key "male"]
+  toChunks Male   = [Key "male"]
   toChunks Female = [Key "female"]
 
 instance ToChunks Percussion where
@@ -164,24 +164,25 @@ instance FromChunks Metadata where
     <*> (getTag "track_number"  cs >>= fromChunks)
     <*> (getTag "has_album"     cs >>= fromChunks)
 
-data Genre = Metal
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
+newtype Genre = Genre B8.ByteString
+  deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Genre where
-  toChunks Metal = [Key "metal"]
+  toChunks (Genre b) = [Key b]
 
 instance FromChunks Genre where
-  fromChunks [Key "metal"] = Right Metal
+  fromChunks [Key b] = Right $ Genre b
   fromChunks cs = Left $ "Couldn't read as Genre: " ++ show cs
 
-data SubGenre = Prog
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
+-- | Always of the form "subgenre_foo".
+newtype SubGenre = SubGenre B8.ByteString
+  deriving (Eq, Ord, Show, Read)
 
 instance ToChunks SubGenre where
-  toChunks Prog = [Key "subgenre_prog"]
+  toChunks (SubGenre b) = [Key b]
 
 instance FromChunks SubGenre where
-  fromChunks [Key "subgenre_prog"] = Right Prog
+  fromChunks [Key b] = Right $ SubGenre b
   fromChunks cs = Left $ "Couldn't read as SubGenre: " ++ show cs
 
 data Country

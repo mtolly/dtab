@@ -37,6 +37,7 @@ instance FromChunks Languages where
 data Gamedata = Gamedata
   { previewStartMs   :: Integer
   , rankGuitar       :: Integer
+  -- ^ 1 is no dots, 7 is devils.
   , rankBass         :: Integer
   , rankDrum         :: Integer
   , rankVocals       :: Integer
@@ -44,7 +45,12 @@ data Gamedata = Gamedata
   , rankProKeys      :: Integer
   , rankBand         :: Integer
   , vocalScrollSpeed :: Integer
+  -- ^ Normal = 2300.
+  --   Fast = 2000.
   , animTempo        :: Integer
+  -- ^ Slow (under 100bpm) = 16.
+  --   Medium (100-160bpm) = 32.
+  --   Fast (over 160bpm) = 64.
   , vocalGender      :: Gender
   , vocalPercussion  :: Percussion
   , vocalParts       :: Integer
@@ -54,7 +60,7 @@ data Gamedata = Gamedata
 data Gender = Male | Female
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
-data Percussion = Tambourine
+data Percussion = Tambourine | Cowbell | Handclap
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 instance ToChunks Gamedata where
@@ -81,14 +87,18 @@ instance ToChunks Gender where
 
 instance ToChunks Percussion where
   toChunks Tambourine = [Key "tambourine"]
+  toChunks Cowbell    = [Key "cowbell"]
+  toChunks Handclap   = [Key "handclap"]
 
 instance FromChunks Gender where
-  fromChunks [Key "male"] = Right Male
+  fromChunks [Key "male"  ] = Right Male
   fromChunks [Key "female"] = Right Female
   fromChunks cs = Left $ "Couldn't read as Gender: " ++ show cs
 
 instance FromChunks Percussion where
   fromChunks [Key "tambourine"] = Right Tambourine
+  fromChunks [Key "cowbell"   ] = Right Cowbell
+  fromChunks [Key "handclap"  ] = Right Handclap
   fromChunks cs = Left $ "Couldn't read as Percussion: " ++ show cs
 
 instance FromChunks Gamedata where
@@ -174,14 +184,60 @@ instance FromChunks SubGenre where
   fromChunks [Key "subgenre_prog"] = Right Prog
   fromChunks cs = Left $ "Couldn't read as SubGenre: " ++ show cs
 
-data Country = US
+data Country
+  = Australia
+  | Canada
+  | Denmark
+  | France
+  | Germany
+  | Ireland
+  | Italy
+  | Japan
+  | Netherlands
+  | NewZealand
+  | Norway
+  | Singapore
+  | Spain
+  | Sweden
+  | UnitedKingdom
+  | UnitedStates
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 instance ToChunks Country where
-  toChunks US = [Key "ugc_country_us"]
+  toChunks Australia     = [Key "ugc_country_australia"]
+  toChunks Canada        = [Key "ugc_country_canada"]
+  toChunks Denmark       = [Key "ugc_country_denmark"]
+  toChunks France        = [Key "ugc_country_france"]
+  toChunks Germany       = [Key "ugc_country_germany"]
+  toChunks Ireland       = [Key "ugc_country_ireland"]
+  toChunks Italy         = [Key "ugc_country_italy"]
+  toChunks Japan         = [Key "ugc_country_japan"]
+  toChunks Netherlands   = [Key "ugc_country_netherlands"]
+  toChunks NewZealand    = [Key "ugc_country_newzealand"]
+  toChunks Norway        = [Key "ugc_country_norway"]
+  toChunks Singapore     = [Key "ugc_country_singapore"]
+  toChunks Spain         = [Key "ugc_country_spain"]
+  toChunks Sweden        = [Key "ugc_country_sweden"]
+  toChunks UnitedKingdom = [Key "ugc_country_uk"]
+  toChunks UnitedStates  = [Key "ugc_country_us"]
 
 instance FromChunks Country where
-  fromChunks [Key "ugc_country_us"] = Right US
+  fromChunks [Key "ugc_country_australia"  ] = Right Australia
+  fromChunks [Key "ugc_country_canada"     ] = Right Canada
+  fromChunks [Key "ugc_country_denmark"    ] = Right Denmark
+  fromChunks [Key "ugc_country_france"     ] = Right France
+  fromChunks [Key "ugc_country_germany"    ] = Right Germany
+  fromChunks [Key "ugc_country_ireland"    ] = Right Ireland
+  fromChunks [Key "ugc_country_italy"      ] = Right Italy
+  fromChunks [Key "ugc_country_japan"      ] = Right Japan
+  fromChunks [Key "ugc_country_netherlands"] = Right Netherlands
+  fromChunks [Key "ugc_country_newzealand" ] = Right NewZealand
+  fromChunks [Key "ugc_country_norway"     ] = Right Norway
+  fromChunks [Key "ugc_country_singapore"  ] = Right Singapore
+  fromChunks [Key "ugc_country_spain"      ] = Right Spain
+  fromChunks [Key "ugc_country_sweden"     ] = Right Sweden
+  fromChunks [Key "ugc_country_uk"         ] = Right UnitedKingdom
+  fromChunks [Key "ugc_country_us"         ] = Right UnitedStates
   fromChunks cs = Left $ "Couldn't read as Country: " ++ show cs
 
 data Project = Project
@@ -232,6 +288,10 @@ instance DTAFormat Project where
 data Midi = Midi
   { midiFile     :: B8.ByteString
   , autogenTheme :: B8.ByteString
+  -- ^  \"\" (Default), \"AggressiveMetal.rbtheme\", \"ArenaRock.rbtheme\",
+  -- \"DarkHeavyRock.rbtheme\", \"DustyVintage.rbtheme\", \"EdgyProgRock.rbtheme\",
+  -- \"FeelGoodPopRock.rbtheme\", \"GaragePunkRock.rbtheme\",
+  -- \"PsychJamRock.rbtheme\", \"SlowJam.rbtheme\", \"SynthPop.rbtheme\"
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Midi where

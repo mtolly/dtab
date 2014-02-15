@@ -22,6 +22,8 @@ Library
                     data-binary-ieee754, binary, array, pretty, QuickCheck
   Exposed-modules:  Data.DTA
                     Data.DTA.Crypt
+                    Data.DTA.Serialize
+                    Data.DTA.Serialize.Magma
   Other-modules:    Data.DTA.Base
                     Data.DTA.Lex
                     Data.DTA.Parse

@@ -4,9 +4,6 @@ module Data.DTA.Parse (parse) where
 
 import Data.DTA.Base
 import qualified Data.DTA.Lex as L
-import System.IO
-import Control.Applicative
-import qualified Data.ByteString.Char8 as B8
 }
 
 %name parse

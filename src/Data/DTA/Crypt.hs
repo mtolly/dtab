@@ -7,19 +7,17 @@ module Data.DTA.Crypt
 , Key, Crypt
 ) where
 
-import Data.Word
-import Data.Bits
-import System.IO
+import Control.Monad (forM_, liftM2, liftM3)
+import Control.Monad.ST.Lazy (ST, runST)
+import Data.Array.ST (STArray, newArray, readArray, writeArray)
+import Data.Bits (shiftR, (.&.), (.|.), xor)
+import Data.STRef.Lazy (STRef, newSTRef, readSTRef, writeSTRef)
+import Data.Word (Word8, Word32)
+import System.IO (Handle)
 
+import Data.Binary.Get (runGet, getWord32le, getRemainingLazyByteString)
+import Data.Binary.Put (runPut, putWord32le, putLazyByteString)
 import qualified Data.ByteString.Lazy as BL
-import Control.Monad
-
-import Data.Binary.Put
-import Data.Binary.Get
-
-import Control.Monad.ST.Lazy
-import Data.STRef.Lazy
-import Data.Array.ST
 
 -- | An encryption/decryption key.
 type Key = Word32

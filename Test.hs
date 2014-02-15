@@ -1,14 +1,14 @@
 ﻿-- | QuickCheck tests for the dtab library.
 module Main where
 
-import Data.DTA
 import Data.Binary
-import Data.DTA.Parse
-import Data.DTA.PrettyPrint
-import Data.DTA.Crypt
 import qualified Data.ByteString.Lazy as BL
-import Test.QuickCheck
+import qualified Test.QuickCheck as QC
 
+import Data.DTA
+import Data.DTA.Crypt
+
+main :: IO ()
 main = do
   runTest prop_binaryRoundTrip "binary round trip is equal"
   runTest prop_textRoundTrip "text round trip is equal (disregarding nodeID)"
@@ -17,19 +17,20 @@ main = do
   runTest prop_newCryptRoundTrip "new encryption round trip is equal"
   runTest prop_oldCryptRoundTrip "old encryption round trip is equal"
 
-runTest :: (Testable a) => a -> String -> IO ()
-runTest x str = putStrLn ("Testing: " ++ str) >> quickCheck x
+runTest :: (QC.Testable a) => a -> String -> IO ()
+runTest x str = putStrLn ("Testing: " ++ str) >> QC.quickCheck x
 
 newtype AnyLazy = AL { fromAL :: BL.ByteString }
   deriving (Eq, Ord, Show)
-instance Arbitrary AnyLazy where
-  arbitrary = fmap (AL . BL.pack) arbitrary
+
+instance QC.Arbitrary AnyLazy where
+  arbitrary = fmap (AL . BL.pack) QC.arbitrary
 
 prop_binaryRoundTrip :: DTA -> Bool
 prop_binaryRoundTrip d = d == decode (encode d)
 
 prop_textRoundTrip :: DTA -> Bool
-prop_textRoundTrip d = equivDTA d $ fromString $ toString d
+prop_textRoundTrip d = equivDTA d $ sFromDTA $ sToDTA d
 
 prop_renumberEquiv :: DTA -> Bool
 prop_renumberEquiv d = equivDTA d $ renumberFrom 0 d

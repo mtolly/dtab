@@ -1,13 +1,10 @@
 {
 -- | Generated lexer for text @.dta@ files.
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -w #-}
 module Data.DTA.Lex (scan, Token(..), AlexPosn(..)) where
 
 import qualified Data.ByteString.Char8 as B8
 import Data.Int (Int32)
-import Data.Typeable
-import Data.Data
 }
 
 %wrapper "posn"
@@ -78,7 +75,7 @@ data Token
   | Include
   | Merge
   | IfNDef
-  deriving (Eq, Ord, Show, Read, Data, Typeable)
+  deriving (Eq, Ord, Show, Read)
 
 -- | Reads a single-quoted string, by converting it to a double-quoted one.
 getKeyword :: String -> String

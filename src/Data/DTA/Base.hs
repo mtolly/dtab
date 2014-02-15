@@ -4,23 +4,20 @@ module Data.DTA.Base
 , renumberFrom
 ) where
 
-import qualified Control.Monad.Trans.State as S
-
-import Data.Int (Int32)
-
-import Control.Monad
-import Control.Applicative
-
-import Data.Typeable
-import Data.Data
-import Test.QuickCheck
-
-import Data.Binary
-import Data.Binary.Put
-import Data.Binary.Get
-import Data.Binary.IEEE754 (putFloat32le, getFloat32le)
-
+import Control.Applicative ((<$>), (<*>), liftA2)
+import Control.Monad (replicateM)
 import qualified Data.ByteString as B
+import Data.Data (Data)
+import Data.Int (Int32)
+import Data.Typeable (Typeable)
+import Data.Word (Word32, Word8)
+
+import qualified Control.Monad.Trans.State as S
+import Data.Binary (Binary(..), Put, Get)
+import Data.Binary.Get (getWord32le, getWord16le, getBytes, skip)
+import Data.Binary.IEEE754 (putFloat32le, getFloat32le)
+import Data.Binary.Put (putWord32le, putWord16le, putByteString)
+import qualified Test.QuickCheck as QC
 
 --
 -- Type definitions
@@ -124,25 +121,25 @@ getLenStr = getWord32le >>= getBytes . fromIntegral
 -- QuickCheck testing instances
 --
 
-arbByteString :: Gen B.ByteString
-arbByteString = B.pack <$> arbitrary
+arbByteString :: QC.Gen B.ByteString
+arbByteString = B.pack <$> QC.arbitrary
 
 -- | Generates a tree which may have subtrees up to the given depth.
-arbTree :: Int -> Gen Tree
-arbTree n = liftA2 Tree arbitrary $ listOf $ arbChunk n
+arbTree :: Int -> QC.Gen Tree
+arbTree n = liftA2 Tree QC.arbitrary $ QC.listOf $ arbChunk n
 
 -- | Generates a chunk which may have subtrees up to the given depth.
-arbChunk :: Int -> Gen Chunk
+arbChunk :: Int -> QC.Gen Chunk
 arbChunk 0 = arbLeaf
-arbChunk n = frequency
-  [ (1, elements [Parens, Braces, Brackets] <*> arbTree (n - 1))
+arbChunk n = QC.frequency
+  [ (1, QC.elements [Parens, Braces, Brackets] <*> arbTree (n - 1))
   , (10, arbLeaf) ]
 
 -- | Generates a chunk which is not a subtree.
-arbLeaf :: Gen Chunk
-arbLeaf = oneof
-  [ Int <$> arbitrary
-  , Float <$> arbitrary
+arbLeaf :: QC.Gen Chunk
+arbLeaf = QC.oneof
+  [ Int <$> QC.arbitrary
+  , Float <$> QC.arbitrary
   --, Var <$> arbByteString
   , Key <$> arbByteString
   , return Unhandled
@@ -156,14 +153,14 @@ arbLeaf = oneof
   --, IfNDef <$> arbByteString
   ]
 
-instance Arbitrary DTA where
-  arbitrary = liftA2 DTA arbitrary arbitrary
+instance QC.Arbitrary DTA where
+  arbitrary = liftA2 DTA QC.arbitrary QC.arbitrary
 
-instance Arbitrary Tree where
-  arbitrary = sized $ \n -> arbTree $ if n > 2 then 2 else n
+instance QC.Arbitrary Tree where
+  arbitrary = QC.sized $ \n -> arbTree $ if n > 2 then 2 else n
 
-instance Arbitrary Chunk where
-  arbitrary = sized $ \n -> arbChunk $ if n > 2 then 2 else n
+instance QC.Arbitrary Chunk where
+  arbitrary = QC.sized $ \n -> arbChunk $ if n > 2 then 2 else n
 
 -- | Assign new sequential node IDs to each tree in a DTA, starting with the
 -- top-level tree.

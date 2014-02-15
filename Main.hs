@@ -1,10 +1,13 @@
 -- | dtab application with two functions: binary <-> text, and decrypt/encrypt.
 module Main where
 
+import System.Environment (getArgs)
+import qualified System.IO as IO
+import Data.Version (showVersion)
+
 import Data.DTA
 import Data.DTA.Crypt
-import System.Environment
-import System.IO
+import Paths_dtab (version)
 
 main = getArgs >>= \args ->
   case args of
@@ -19,27 +22,29 @@ main = getArgs >>= \args ->
           "-E" -> encryptHandle newCrypt key hin hout
           _ -> printUsage
           where key = case rest of
-                  (str:_) -> read str
+                  str : _ -> read str
                   _       -> 0x30171609
     _ -> printUsage
 
-withHandleIn :: String -> (Handle -> IO a) -> IO a
-withHandleIn "-" f = f stdin
-withHandleIn fp  f = withFile fp ReadMode f
+withHandleIn :: String -> (IO.Handle -> IO a) -> IO a
+withHandleIn "-" f = f IO.stdin
+withHandleIn fp  f = IO.withFile fp IO.ReadMode f
 
-withHandleOut :: String -> (Handle -> IO a) -> IO a
-withHandleOut "-" f = f stdout
-withHandleOut fp  f = withFile fp WriteMode f
+withHandleOut :: String -> (IO.Handle -> IO a) -> IO a
+withHandleOut "-" f = f IO.stdout
+withHandleOut fp  f = IO.withFile fp IO.WriteMode f
 
 printUsage :: IO ()
-printUsage = mapM_ putStrLn
-  [ "dtab v0.8, by onyxite. Built on earlier work by xorloser and deimos."
-  , "Usage: dtab mode file-in file-out [encrypt-key]"
-  , "Modes: -a converts DTB (binary) to DTA (text)"
-  , "       -b converts DTA (text) to DTB (binary)"
-  , "       -d decrypts new-style DTB"
-  , "       -e encrypts new-style DTB, with optional key"
-  , "       -D decrypts old-style DTB"
-  , "       -E encrypts old-style DTB, with optional key"
-  , "Old-style is used in early PS2 games, new-style otherwise."
-  , "Use a hyphen (-) for stdin (file-in) or stdout (file-out)." ]
+printUsage = do
+  let v = showVersion version
+  mapM_ (IO.hPutStrLn IO.stderr)
+    [ "dtab v"++v++", by onyxite. Built on earlier work by xorloser and deimos."
+    , "Usage: dtab mode file-in file-out [encrypt-key]"
+    , "Modes: -a converts DTB (binary) to DTA (text)"
+    , "       -b converts DTA (text) to DTB (binary)"
+    , "       -d decrypts new-style DTB"
+    , "       -e encrypts new-style DTB, with optional key"
+    , "       -D decrypts old-style DTB"
+    , "       -E encrypts old-style DTB, with optional key"
+    , "Old-style is used in early PS2 games, new-style otherwise."
+    , "Use a hyphen (-) for stdin (file-in) or stdout (file-out)." ]

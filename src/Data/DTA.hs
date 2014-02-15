@@ -9,19 +9,18 @@ module Data.DTA
 , renumberFrom
 ) where
 
-import Control.Applicative
+import Control.Applicative ((<$>))
+import System.IO (withFile, Handle, IOMode(ReadMode, WriteMode))
 
-import Data.Binary
-
+import Data.Binary (decode, encode)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy as BL
-import System.IO
 
 import Data.DTA.Base
+import Data.DTA.Lex
+import Data.DTA.Parse
 import Data.DTA.PrettyPrint
-import Data.DTA.Lex (scan)
-import Data.DTA.Parse (parse)
 
 lFromDTB :: BL.ByteString -> DTA
 lFromDTB = decode

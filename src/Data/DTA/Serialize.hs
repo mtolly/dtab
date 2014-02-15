@@ -4,9 +4,14 @@ import Data.DTA.Base
 import qualified Data.ByteString.Char8 as B8
 import Control.Applicative (liftA2)
 
+-- | Class for types which are stored as complete DTA files.
 class DTAFormat a where
   serialize   :: a -> DTA
   unserialize :: DTA -> Either String a
+
+instance DTAFormat DTA where
+  serialize   = id
+  unserialize = Right
 
 class ToChunks a where
   toChunks :: a -> [Chunk]
@@ -20,12 +25,15 @@ instance ToChunks DTA where
 instance FromChunks DTA where
   fromChunks = Right . DTA 0 . Tree 0
 
+-- | @getTag tag chunks@ looks for a 'Chunk' of the form @(tag ...)@ and, if
+-- found, returns the @...@
 getTag :: B8.ByteString -> [Chunk] -> Either String [Chunk]
 getTag t cs =
   case [ xs | Parens (Tree _ (Key x : xs)) <- cs, x == t ] of
     [rest] -> Right rest
     xs     -> Left $ show (length xs) ++ " matches for tag " ++ B8.unpack t
 
+-- | Creates an association list entry of the form located by 'getTag'.
 tagged :: B8.ByteString -> [Chunk] -> Chunk
 tagged t cs = Parens $ Tree 0 $ Key t : cs
 

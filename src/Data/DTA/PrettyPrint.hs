@@ -1,9 +1,8 @@
 -- | Pretty-print text (DTA) files with the HughesPJ library.
-module Data.DTA.PrettyPrint (toByteString, toString, toHandle, toFile) where
+module Data.DTA.PrettyPrint (sToDTA) where
 
-import Data.DTA hiding (toFile, toHandle)
+import Data.DTA.Base
 import Text.PrettyPrint.HughesPJ
-import System.IO
 import qualified Data.ByteString.Char8 as B8
 
 ppChunk :: Chunk -> Doc
@@ -53,14 +52,5 @@ ppKey = text . f . show where
 ppDTA :: DTA -> Doc
 ppDTA = vcat . map ppChunk . treeChunks . topTree
 
-toString :: DTA -> String
-toString = render . ppDTA
-
-toByteString :: DTA -> B8.ByteString
-toByteString = B8.pack . toString
-
-toHandle :: Handle -> DTA -> IO ()
-toHandle h = B8.hPutStr h . toByteString
-
-toFile :: FilePath -> DTA -> IO ()
-toFile fp dta = withFile fp WriteMode $ \h -> toHandle h dta
+sToDTA :: DTA -> String
+sToDTA = render . ppDTA

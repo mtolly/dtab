@@ -1,8 +1,8 @@
 {
 -- | Generated parser for text @.dta@ files.
-module Data.DTA.Parse (parse, fromString, fromByteString, fromFile, fromHandle) where
+module Data.DTA.Parse (parse) where
 
-import Data.DTA hiding (fromFile, fromHandle)
+import Data.DTA.Base
 import qualified Data.DTA.Lex as L
 import System.IO
 import Control.Applicative
@@ -61,20 +61,6 @@ Chunk : int { Int $1 }
       | ifndef key { IfNDef $2 }
 
 {
-
-fromString :: String -> DTA
-fromString = parse . L.scan
-
-fromByteString :: B8.ByteString -> DTA
-fromByteString = fromString . B8.unpack
-
--- | Reads a strict ByteString from the handle.
-fromHandle :: Handle -> IO DTA
-fromHandle h = fromByteString <$> B8.hGetContents h
-
--- | Reads a strict ByteString from the file.
-fromFile :: FilePath -> IO DTA
-fromFile fp = withFile fp ReadMode fromHandle
 
 -- | If instead of this error, "Internal Happy error" is sometimes printed, make
 -- sure you are using Happy 1.18.7 or later.

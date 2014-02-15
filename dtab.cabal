@@ -21,10 +21,11 @@ Library
   Build-Depends:    base >= 4 && <= 5, bytestring, transformers,
                     data-binary-ieee754, binary, array, pretty, QuickCheck
   Exposed-modules:  Data.DTA
-                    Data.DTA.PrettyPrint
                     Data.DTA.Crypt
+  Other-modules:    Data.DTA.Base
                     Data.DTA.Lex
                     Data.DTA.Parse
+                    Data.DTA.PrettyPrint
   hs-source-dirs:   src
   ghc-options:      -Wall
 

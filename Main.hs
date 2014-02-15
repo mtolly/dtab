@@ -2,8 +2,6 @@
 module Main where
 
 import Data.DTA
-import qualified Data.DTA.PrettyPrint as DTA
-import qualified Data.DTA.Parse as DTA
 import Data.DTA.Crypt
 import System.Environment
 import System.IO
@@ -13,8 +11,8 @@ main = getArgs >>= \args ->
     (mode : fin : fout : rest) ->
       withHandleIn fin $ \hin ->
         withHandleOut fout $ \hout -> case mode of
-          "-a" -> fromHandle hin >>= DTA.toHandle hout
-          "-b" -> DTA.fromHandle hin >>= toHandle hout
+          "-a" -> hFromDTB hin >>= hToDTA hout
+          "-b" -> hFromDTA hin >>= hToDTB hout
           "-d" -> decryptHandle newCrypt hin hout
           "-e" -> encryptHandle newCrypt key hin hout
           "-D" -> decryptHandle oldCrypt hin hout

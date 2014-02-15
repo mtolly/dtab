@@ -73,3 +73,9 @@ instance (ToChunks a) => ToChunks (Maybe a) where
 instance (FromChunks a) => FromChunks (Maybe a) where
   fromChunks [] = Right Nothing
   fromChunks cs = fmap Just $ fromChunks cs
+
+instance (ToChunks a) => ToChunks [a] where
+  toChunks = concatMap toChunks
+
+instance (FromChunks a) => FromChunks [a] where
+  fromChunks = mapM $ \x -> fromChunks [x]

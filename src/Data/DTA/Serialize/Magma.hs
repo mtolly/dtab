@@ -6,6 +6,51 @@ import Data.DTA.Serialize
 import qualified Data.ByteString.Char8 as B8
 import Control.Applicative
 
+data Project = Project
+  { toolVersion     :: B8.ByteString
+  , projectVersion  :: Integer
+  , metadata        :: Metadata
+  , gamedata        :: Gamedata
+  , languages       :: Languages
+  , destinationFile :: B8.ByteString
+  , midi            :: Midi
+  , dryVox          :: DryVox
+  , albumArtFile    :: B8.ByteString
+  , tracks          :: Tracks
+  } deriving (Eq, Ord, Show, Read)
+
+instance ToChunks Project where
+  toChunks x =
+    [ tagged "tool_version"             $ toChunks $ toolVersion     x
+    , tagged "project_version"          $ toChunks $ projectVersion  x
+    , tagged "metadata"                 $ toChunks $ metadata        x
+    , tagged "gamedata"                 $ toChunks $ gamedata        x
+    , tagged "languages"                $ toChunks $ languages       x
+    , tagged "destination_file"         $ toChunks $ destinationFile x
+    , tagged "midi"                     $ toChunks $ midi            x
+    , tagged "dry_vox"                  $ toChunks $ dryVox          x
+    , tagged "album_art" [tagged "file" $ toChunks $ albumArtFile    x]
+    , tagged "tracks"                   $ toChunks $ tracks          x
+    ]
+
+instance FromChunks Project where
+  fromChunks cs = Project
+    <$> (getTag "tool_version"     cs  >>= fromChunks)
+    <*> (getTag "project_version"  cs  >>= fromChunks)
+    <*> (getTag "metadata"         cs  >>= fromChunks)
+    <*> (getTag "gamedata"         cs  >>= fromChunks)
+    <*> (getTag "languages"        cs  >>= fromChunks)
+    <*> (getTag "destination_file" cs  >>= fromChunks)
+    <*> (getTag "midi"             cs  >>= fromChunks)
+    <*> (getTag "dry_vox"          cs  >>= fromChunks)
+    <*> (getTag "album_art"        cs  >>= \cs'
+      -> getTag "file"             cs' >>= fromChunks)
+    <*> (getTag "tracks"           cs  >>= fromChunks)
+
+instance DTAFormat Project where
+  serialize p = DTA 0 $ Tree 0 [tagged "project" $ toChunks p]
+  unserialize (DTA _ (Tree _ cs)) = getTag "project" cs >>= fromChunks
+
 data Languages = Languages
   { english  :: Bool
   , french   :: Bool
@@ -57,12 +102,6 @@ data Gamedata = Gamedata
   , guidePitchVolume :: Float
   } deriving (Eq, Ord, Show, Read)
 
-data Gender = Male | Female
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
-
-data Percussion = Tambourine | Cowbell | Handclap
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
-
 instance ToChunks Gamedata where
   toChunks gd =
     [ tagged "preview_start_ms"   $ toChunks $ previewStartMs   gd
@@ -81,26 +120,6 @@ instance ToChunks Gamedata where
     , tagged "guide_pitch_volume" $ toChunks $ guidePitchVolume gd
     ]
 
-instance ToChunks Gender where
-  toChunks Male   = [Key "male"]
-  toChunks Female = [Key "female"]
-
-instance ToChunks Percussion where
-  toChunks Tambourine = [Key "tambourine"]
-  toChunks Cowbell    = [Key "cowbell"]
-  toChunks Handclap   = [Key "handclap"]
-
-instance FromChunks Gender where
-  fromChunks [Key "male"  ] = Right Male
-  fromChunks [Key "female"] = Right Female
-  fromChunks cs = Left $ "Couldn't read as Gender: " ++ show cs
-
-instance FromChunks Percussion where
-  fromChunks [Key "tambourine"] = Right Tambourine
-  fromChunks [Key "cowbell"   ] = Right Cowbell
-  fromChunks [Key "handclap"  ] = Right Handclap
-  fromChunks cs = Left $ "Couldn't read as Percussion: " ++ show cs
-
 instance FromChunks Gamedata where
   fromChunks cs = Gamedata
     <$> (getTag "preview_start_ms"   cs >>= fromChunks)
@@ -117,6 +136,32 @@ instance FromChunks Gamedata where
     <*> (getTag "vocal_percussion"   cs >>= fromChunks)
     <*> (getTag "vocal_parts"        cs >>= fromChunks)
     <*> (getTag "guide_pitch_volume" cs >>= fromChunks)
+
+data Gender = Male | Female
+  deriving (Eq, Ord, Show, Read, Enum, Bounded)
+
+instance ToChunks Gender where
+  toChunks Male   = [Key "male"]
+  toChunks Female = [Key "female"]
+
+instance FromChunks Gender where
+  fromChunks [Key "male"  ] = Right Male
+  fromChunks [Key "female"] = Right Female
+  fromChunks cs = Left $ "Couldn't read as Gender: " ++ show cs
+
+data Percussion = Tambourine | Cowbell | Handclap
+  deriving (Eq, Ord, Show, Read, Enum, Bounded)
+
+instance ToChunks Percussion where
+  toChunks Tambourine = [Key "tambourine"]
+  toChunks Cowbell    = [Key "cowbell"]
+  toChunks Handclap   = [Key "handclap"]
+
+instance FromChunks Percussion where
+  fromChunks [Key "tambourine"] = Right Tambourine
+  fromChunks [Key "cowbell"   ] = Right Cowbell
+  fromChunks [Key "handclap"  ] = Right Handclap
+  fromChunks cs = Left $ "Couldn't read as Percussion: " ++ show cs
 
 data Metadata = Metadata
   { songName     :: B8.ByteString
@@ -241,51 +286,6 @@ instance FromChunks Country where
   fromChunks [Key "ugc_country_us"         ] = Right UnitedStates
   fromChunks cs = Left $ "Couldn't read as Country: " ++ show cs
 
-data Project = Project
-  { toolVersion     :: B8.ByteString
-  , projectVersion  :: Integer
-  , metadata        :: Metadata
-  , gamedata        :: Gamedata
-  , languages       :: Languages
-  , destinationFile :: B8.ByteString
-  , midi            :: Midi
-  , dryVox          :: DryVox
-  , albumArtFile    :: B8.ByteString
-  , tracks          :: Tracks
-  } deriving (Eq, Ord, Show, Read)
-
-instance ToChunks Project where
-  toChunks x =
-    [ tagged "tool_version"             $ toChunks $ toolVersion     x
-    , tagged "project_version"          $ toChunks $ projectVersion  x
-    , tagged "metadata"                 $ toChunks $ metadata        x
-    , tagged "gamedata"                 $ toChunks $ gamedata        x
-    , tagged "languages"                $ toChunks $ languages       x
-    , tagged "destination_file"         $ toChunks $ destinationFile x
-    , tagged "midi"                     $ toChunks $ midi            x
-    , tagged "dry_vox"                  $ toChunks $ dryVox          x
-    , tagged "album_art" [tagged "file" $ toChunks $ albumArtFile    x]
-    , tagged "tracks"                   $ toChunks $ tracks          x
-    ]
-
-instance FromChunks Project where
-  fromChunks cs = Project
-    <$> (getTag "tool_version"     cs  >>= fromChunks)
-    <*> (getTag "project_version"  cs  >>= fromChunks)
-    <*> (getTag "metadata"         cs  >>= fromChunks)
-    <*> (getTag "gamedata"         cs  >>= fromChunks)
-    <*> (getTag "languages"        cs  >>= fromChunks)
-    <*> (getTag "destination_file" cs  >>= fromChunks)
-    <*> (getTag "midi"             cs  >>= fromChunks)
-    <*> (getTag "dry_vox"          cs  >>= fromChunks)
-    <*> (getTag "album_art"        cs  >>= \cs'
-      -> getTag "file"             cs' >>= fromChunks)
-    <*> (getTag "tracks"           cs  >>= fromChunks)
-
-instance DTAFormat Project where
-  serialize p = DTA 0 $ Tree 0 [tagged "project" $ toChunks p]
-  unserialize (DTA _ (Tree _ cs)) = getTag "project" cs >>= fromChunks
-
 data Midi = Midi
   { midiFile     :: B8.ByteString
   , autogenTheme :: B8.ByteString
@@ -381,7 +381,6 @@ instance FromChunks Tracks where
     <*> (getTag "keys"        cs >>= fromChunks)
     <*> (getTag "backing"     cs >>= fromChunks)
 
-
 data DrumLayout = DrumLayoutKit
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
@@ -395,8 +394,8 @@ instance FromChunks DrumLayout where
 data AudioFile = AudioFile
   { audioEnabled :: Bool
   , channels     :: Integer
-  , pan          :: Maybe (Float, Float)
-  , vol          :: Maybe (Float, Float)
+  , pan          :: [Float]
+  , vol          :: [Float]
   , audioFile    :: B8.ByteString
   } deriving (Eq, Ord, Show, Read)
 

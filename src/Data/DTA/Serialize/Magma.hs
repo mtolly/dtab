@@ -381,15 +381,25 @@ instance FromChunks Tracks where
     <*> (getTag "keys"        cs >>= fromChunks)
     <*> (getTag "backing"     cs >>= fromChunks)
 
-data DrumLayout = DrumLayoutKit
+data DrumLayout
+  = Kit
+  | KitSnare
+  | KitKick
+  | KitKickSnare
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 instance ToChunks DrumLayout where
-  toChunks DrumLayoutKit = [Key "drum_layout_kit"]
+  toChunks Kit          = [Key "drum_layout_kit"           ]
+  toChunks KitSnare     = [Key "drum_layout_kit_snare"     ]
+  toChunks KitKick      = [Key "drum_layout_kit_kick"      ]
+  toChunks KitKickSnare = [Key "drum_layout_kit_kick_snare"]
 
 instance FromChunks DrumLayout where
-  fromChunks [Key "drum_layout_kit"] = Right DrumLayoutKit
-  fromChunks cs = Left $ "Couldn't read as DryVoxPart: " ++ show cs
+  fromChunks [Key "drum_layout_kit"           ] = Right Kit
+  fromChunks [Key "drum_layout_kit_snare"     ] = Right KitSnare
+  fromChunks [Key "drum_layout_kit_kick"      ] = Right KitKick
+  fromChunks [Key "drum_layout_kit_kick_snare"] = Right KitKickSnare
+  fromChunks cs = Left $ "Couldn't read as DrumLayout: " ++ show cs
 
 data AudioFile = AudioFile
   { audioEnabled :: Bool

@@ -8,14 +8,11 @@ import qualified Data.Map as Map
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 
--- | Class for types which are stored as complete DTA files.
-class DTAFormat a where
-  serialize   :: a -> DTA
-  unserialize :: DTA -> Either String a
+unserialize :: (FromChunks a) => DTA -> Either String a
+unserialize (DTA _ (Tree _ cs)) = fromChunks cs
 
-instance DTAFormat DTA where
-  serialize   = id
-  unserialize = Right
+serialize :: (ToChunks a) => a -> DTA
+serialize = DTA 0 . Tree 0 . toChunks
 
 class ToChunks a where
   toChunks :: a -> [Chunk]
@@ -56,15 +53,23 @@ makeDict :: Dict [Chunk] -> [Chunk]
 makeDict (Dict m) =
   [ Parens $ Tree 0 $ Key k : v | (k, v) <- Map.toList m ]
 
-newtype ParenList a = ParenList { fromParenList :: [a] }
+dictLookup :: B8.ByteString -> Dict v -> Either String v
+dictLookup k (Dict m) = case Map.lookup k m of
+  Nothing -> Left $ "Couldn't find key " ++ show k
+  Just v  -> Right v
+
+makeDict' :: [(B8.ByteString, [Chunk])] -> [Chunk]
+makeDict' = makeDict . Dict . Map.fromList
+
+newtype InParens a = InParens { fromInParens :: a }
   deriving (Eq, Ord, Show, Read)
 
-instance (ToChunks a) => ToChunks (ParenList a) where
-  toChunks (ParenList xs) = [Parens $ Tree 0 $ toChunks xs]
+instance (ToChunks a) => ToChunks (InParens a) where
+  toChunks (InParens xs) = [Parens $ Tree 0 $ toChunks xs]
 
-instance (FromChunks a) => FromChunks (ParenList a) where
-  fromChunks [Parens (Tree _ cs)] = fmap ParenList $ fromChunks cs
-  fromChunks cs = Left $ "Couldn't read as ParenList: " ++ show cs
+instance (FromChunks a) => FromChunks (InParens a) where
+  fromChunks [Parens (Tree _ cs)] = fmap InParens $ fromChunks cs
+  fromChunks cs = Left $ "Couldn't read as InParens: " ++ show cs
 
 instance ToChunks Bool where
   toChunks True = [Int 1]
@@ -126,3 +131,12 @@ instance ToChunks Keyword where
 instance FromChunks Keyword where
   fromChunks [Key k] = Right $ Keyword k
   fromChunks cs = Left $ "Couldn't read as Keyword: " ++ show cs
+
+instance (ToChunks a, ToChunks b) => ToChunks (Either a b) where
+  toChunks = either toChunks toChunks
+
+instance (FromChunks a, FromChunks b) => FromChunks (Either a b) where
+  fromChunks cs = case (fromChunks cs, fromChunks cs) of
+    (Right l, _      ) -> Right $ Left l
+    (_      , Right r) -> Right $ Right r
+    (Left  _, Left  _) -> Left $ "Couldn't read as Either: " ++ show cs

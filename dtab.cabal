@@ -13,7 +13,7 @@ License:            GPL
 License-file:       LICENSE
 Author:             Michael Tolly
 Maintainer:         tolly@wisc.edu
-Build-Type:         Simple
+Build-Type:         Custom
 Cabal-version:      >= 1.8
 Category:           Data
 

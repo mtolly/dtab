@@ -5,6 +5,7 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad ((>=>))
 
 import qualified Data.ByteString.Char8 as B8
+import qualified Data.Map as Map
 
 import Data.DTA
 import Data.DTA.Serialize
@@ -30,7 +31,8 @@ def makeRecord(name, fields)
   data = "data #{name} = #{name} { #{records.join(', ')} } #{deriving}"
 
   to_records = fields.map { |f| "(#{f[0].inspect}, toChunks $ #{f[1]} x)" }
-  to_defn = "toChunks x = makeDict' [ #{to_records.join(', ')} ]"
+  to_defn =
+    "toChunks x = makeDict $ Dict $ Map.fromList [ #{to_records.join(', ')} ]"
   to_instance = "instance ToChunks #{name} where { #{to_defn} }"
 
   from_records =

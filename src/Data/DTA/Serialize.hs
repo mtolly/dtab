@@ -116,3 +116,13 @@ instance (ToChunks a) => ToChunks [a] where
 
 instance (FromChunks a) => FromChunks [a] where
   fromChunks = mapM $ \x -> fromChunks [x]
+
+newtype Keyword = Keyword { fromKeyword :: B8.ByteString }
+  deriving (Eq, Ord, Show, Read)
+
+instance ToChunks Keyword where
+  toChunks (Keyword k) = [Key k]
+
+instance FromChunks Keyword where
+  fromChunks [Key k] = Right $ Keyword k
+  fromChunks cs = Left $ "Couldn't read as Keyword: " ++ show cs

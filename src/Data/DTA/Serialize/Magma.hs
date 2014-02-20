@@ -169,13 +169,13 @@ instance FromChunks Percussion where
 data Metadata = Metadata
   { songName     :: B8.ByteString
   , artistName   :: B8.ByteString
-  , genre        :: Genre
-  , subGenre     :: SubGenre
+  , genre        :: Keyword
+  , subGenre     :: Keyword
   , yearReleased :: Integer
   , albumName    :: B8.ByteString
   , author       :: B8.ByteString
   , releaseLabel :: B8.ByteString
-  , country      :: Country
+  , country      :: Keyword
   , price        :: Integer
   , trackNumber  :: Integer
   , hasAlbum     :: Bool
@@ -211,83 +211,6 @@ instance FromChunks Metadata where
     <*> (dictLookup "price"         d >>= fromChunks)
     <*> (dictLookup "track_number"  d >>= fromChunks)
     <*> (dictLookup "has_album"     d >>= fromChunks)
-
-newtype Genre = Genre B8.ByteString
-  deriving (Eq, Ord, Show, Read)
-
-instance ToChunks Genre where
-  toChunks (Genre b) = [Key b]
-
-instance FromChunks Genre where
-  fromChunks [Key b] = Right $ Genre b
-  fromChunks cs = Left $ "Couldn't read as Genre: " ++ show cs
-
--- | Always of the form "subgenre_foo".
-newtype SubGenre = SubGenre B8.ByteString
-  deriving (Eq, Ord, Show, Read)
-
-instance ToChunks SubGenre where
-  toChunks (SubGenre b) = [Key b]
-
-instance FromChunks SubGenre where
-  fromChunks [Key b] = Right $ SubGenre b
-  fromChunks cs = Left $ "Couldn't read as SubGenre: " ++ show cs
-
-data Country
-  = Australia
-  | Canada
-  | Denmark
-  | France
-  | Germany
-  | Ireland
-  | Italy
-  | Japan
-  | Netherlands
-  | NewZealand
-  | Norway
-  | Singapore
-  | Spain
-  | Sweden
-  | UnitedKingdom
-  | UnitedStates
-  deriving (Eq, Ord, Show, Read, Enum, Bounded)
-
-instance ToChunks Country where
-  toChunks Australia     = [Key "ugc_country_australia"]
-  toChunks Canada        = [Key "ugc_country_canada"]
-  toChunks Denmark       = [Key "ugc_country_denmark"]
-  toChunks France        = [Key "ugc_country_france"]
-  toChunks Germany       = [Key "ugc_country_germany"]
-  toChunks Ireland       = [Key "ugc_country_ireland"]
-  toChunks Italy         = [Key "ugc_country_italy"]
-  toChunks Japan         = [Key "ugc_country_japan"]
-  toChunks Netherlands   = [Key "ugc_country_netherlands"]
-  toChunks NewZealand    = [Key "ugc_country_newzealand"]
-  toChunks Norway        = [Key "ugc_country_norway"]
-  toChunks Singapore     = [Key "ugc_country_singapore"]
-  toChunks Spain         = [Key "ugc_country_spain"]
-  toChunks Sweden        = [Key "ugc_country_sweden"]
-  toChunks UnitedKingdom = [Key "ugc_country_uk"]
-  toChunks UnitedStates  = [Key "ugc_country_us"]
-
-instance FromChunks Country where
-  fromChunks [Key "ugc_country_australia"  ] = Right Australia
-  fromChunks [Key "ugc_country_canada"     ] = Right Canada
-  fromChunks [Key "ugc_country_denmark"    ] = Right Denmark
-  fromChunks [Key "ugc_country_france"     ] = Right France
-  fromChunks [Key "ugc_country_germany"    ] = Right Germany
-  fromChunks [Key "ugc_country_ireland"    ] = Right Ireland
-  fromChunks [Key "ugc_country_italy"      ] = Right Italy
-  fromChunks [Key "ugc_country_japan"      ] = Right Japan
-  fromChunks [Key "ugc_country_netherlands"] = Right Netherlands
-  fromChunks [Key "ugc_country_newzealand" ] = Right NewZealand
-  fromChunks [Key "ugc_country_norway"     ] = Right Norway
-  fromChunks [Key "ugc_country_singapore"  ] = Right Singapore
-  fromChunks [Key "ugc_country_spain"      ] = Right Spain
-  fromChunks [Key "ugc_country_sweden"     ] = Right Sweden
-  fromChunks [Key "ugc_country_uk"         ] = Right UnitedKingdom
-  fromChunks [Key "ugc_country_us"         ] = Right UnitedStates
-  fromChunks cs = Left $ "Couldn't read as Country: " ++ show cs
 
 data Midi = Midi
   { midiFile     :: B8.ByteString

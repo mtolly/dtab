@@ -5,6 +5,8 @@ import Data.DTA
 import Data.DTA.Serialize
 import qualified Data.ByteString.Char8 as B8
 import Control.Applicative
+import qualified Data.Map as Map
+import Control.Monad ((>=>))
 
 data Project = Project
   { toolVersion     :: B8.ByteString
@@ -20,36 +22,37 @@ data Project = Project
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Project where
-  toChunks x =
-    [ tagged "tool_version"             $ toChunks $ toolVersion     x
-    , tagged "project_version"          $ toChunks $ projectVersion  x
-    , tagged "metadata"                 $ toChunks $ metadata        x
-    , tagged "gamedata"                 $ toChunks $ gamedata        x
-    , tagged "languages"                $ toChunks $ languages       x
-    , tagged "destination_file"         $ toChunks $ destinationFile x
-    , tagged "midi"                     $ toChunks $ midi            x
-    , tagged "dry_vox"                  $ toChunks $ dryVox          x
-    , tagged "album_art" [tagged "file" $ toChunks $ albumArtFile    x]
-    , tagged "tracks"                   $ toChunks $ tracks          x
+  toChunks x = makeDict'
+    [ ("tool_version"                 , toChunks $ toolVersion     x)
+    , ("project_version"              , toChunks $ projectVersion  x)
+    , ("metadata"                     , toChunks $ metadata        x)
+    , ("gamedata"                     , toChunks $ gamedata        x)
+    , ("languages"                    , toChunks $ languages       x)
+    , ("destination_file"             , toChunks $ destinationFile x)
+    , ("midi"                         , toChunks $ midi            x)
+    , ("dry_vox"                      , toChunks $ dryVox          x)
+    , ("album_art", makeDict' [("file", toChunks $ albumArtFile    x)])
+    , ("tracks"                       , toChunks $ tracks          x)
     ]
 
 instance FromChunks Project where
-  fromChunks cs = Project
-    <$> (getTag "tool_version"     cs  >>= fromChunks)
-    <*> (getTag "project_version"  cs  >>= fromChunks)
-    <*> (getTag "metadata"         cs  >>= fromChunks)
-    <*> (getTag "gamedata"         cs  >>= fromChunks)
-    <*> (getTag "languages"        cs  >>= fromChunks)
-    <*> (getTag "destination_file" cs  >>= fromChunks)
-    <*> (getTag "midi"             cs  >>= fromChunks)
-    <*> (getTag "dry_vox"          cs  >>= fromChunks)
-    <*> (getTag "album_art"        cs  >>= \cs'
-      -> getTag "file"             cs' >>= fromChunks)
-    <*> (getTag "tracks"           cs  >>= fromChunks)
+  fromChunks = getDict >=> \d -> Project
+    <$> (dictLookup "tool_version"     d >>= fromChunks)
+    <*> (dictLookup "project_version"  d >>= fromChunks)
+    <*> (dictLookup "metadata"         d >>= fromChunks)
+    <*> (dictLookup "gamedata"         d >>= fromChunks)
+    <*> (dictLookup "languages"        d >>= fromChunks)
+    <*> (dictLookup "destination_file" d >>= fromChunks)
+    <*> (dictLookup "midi"             d >>= fromChunks)
+    <*> (dictLookup "dry_vox"          d >>= fromChunks)
+    <*> (dictLookup "album_art"        d >>=
+      getDict >>= dictLookup "file"      >>= fromChunks)
+    <*> (dictLookup "tracks"           d >>= fromChunks)
 
 instance DTAFormat Project where
-  serialize p = DTA 0 $ Tree 0 [tagged "project" $ toChunks p]
-  unserialize (DTA _ (Tree _ cs)) = getTag "project" cs >>= fromChunks
+  serialize p = DTA 0 $ Tree 0 $ makeDict' [("project", toChunks p)]
+  unserialize (DTA _ (Tree _ cs)) =
+    getDict cs >>= dictLookup "project" >>= fromChunks
 
 data Languages = Languages
   { english  :: Bool
@@ -61,23 +64,23 @@ data Languages = Languages
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Languages where
-  toChunks l =
-    [ tagged "english" $ toChunks $ english  l
-    , tagged "french"  $ toChunks $ french   l
-    , tagged "italian" $ toChunks $ italian  l
-    , tagged "spanish" $ toChunks $ spanish  l
-    , tagged "german"  $ toChunks $ german   l
-    , tagged "japanese"$ toChunks $ japanese l
+  toChunks l = makeDict'
+    [ ("english" , toChunks $ english  l)
+    , ("french"  , toChunks $ french   l)
+    , ("italian" , toChunks $ italian  l)
+    , ("spanish" , toChunks $ spanish  l)
+    , ("german"  , toChunks $ german   l)
+    , ("japanese", toChunks $ japanese l)
     ]
 
 instance FromChunks Languages where
-  fromChunks cs = Languages
-    <$> (getTag "english"  cs >>= fromChunks)
-    <*> (getTag "french"   cs >>= fromChunks)
-    <*> (getTag "italian"  cs >>= fromChunks)
-    <*> (getTag "spanish"  cs >>= fromChunks)
-    <*> (getTag "german"   cs >>= fromChunks)
-    <*> (getTag "japanese" cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> Languages
+    <$> (dictLookup "english"  d >>= fromChunks)
+    <*> (dictLookup "french"   d >>= fromChunks)
+    <*> (dictLookup "italian"  d >>= fromChunks)
+    <*> (dictLookup "spanish"  d >>= fromChunks)
+    <*> (dictLookup "german"   d >>= fromChunks)
+    <*> (dictLookup "japanese" d >>= fromChunks)
 
 data Gamedata = Gamedata
   { previewStartMs   :: Integer
@@ -103,39 +106,39 @@ data Gamedata = Gamedata
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Gamedata where
-  toChunks gd =
-    [ tagged "preview_start_ms"   $ toChunks $ previewStartMs   gd
-    , tagged "rank_guitar"        $ toChunks $ rankGuitar       gd
-    , tagged "rank_bass"          $ toChunks $ rankBass         gd
-    , tagged "rank_drum"          $ toChunks $ rankDrum         gd
-    , tagged "rank_vocals"        $ toChunks $ rankVocals       gd
-    , tagged "rank_keys"          $ toChunks $ rankKeys         gd
-    , tagged "rank_pro_keys"      $ toChunks $ rankProKeys      gd
-    , tagged "rank_band"          $ toChunks $ rankBand         gd
-    , tagged "vocal_scroll_speed" $ toChunks $ vocalScrollSpeed gd
-    , tagged "anim_tempo"         $ toChunks $ animTempo        gd
-    , tagged "vocal_gender"       $ toChunks $ vocalGender      gd
-    , tagged "vocal_percussion"   $ toChunks $ vocalPercussion  gd
-    , tagged "vocal_parts"        $ toChunks $ vocalParts       gd
-    , tagged "guide_pitch_volume" $ toChunks $ guidePitchVolume gd
+  toChunks gd = makeDict'
+    [ ("preview_start_ms"  , toChunks $ previewStartMs   gd)
+    , ("rank_guitar"       , toChunks $ rankGuitar       gd)
+    , ("rank_bass"         , toChunks $ rankBass         gd)
+    , ("rank_drum"         , toChunks $ rankDrum         gd)
+    , ("rank_vocals"       , toChunks $ rankVocals       gd)
+    , ("rank_keys"         , toChunks $ rankKeys         gd)
+    , ("rank_pro_keys"     , toChunks $ rankProKeys      gd)
+    , ("rank_band"         , toChunks $ rankBand         gd)
+    , ("vocal_scroll_speed", toChunks $ vocalScrollSpeed gd)
+    , ("anim_tempo"        , toChunks $ animTempo        gd)
+    , ("vocal_gender"      , toChunks $ vocalGender      gd)
+    , ("vocal_percussion"  , toChunks $ vocalPercussion  gd)
+    , ("vocal_parts"       , toChunks $ vocalParts       gd)
+    , ("guide_pitch_volume", toChunks $ guidePitchVolume gd)
     ]
 
 instance FromChunks Gamedata where
-  fromChunks cs = Gamedata
-    <$> (getTag "preview_start_ms"   cs >>= fromChunks)
-    <*> (getTag "rank_guitar"        cs >>= fromChunks)
-    <*> (getTag "rank_bass"          cs >>= fromChunks)
-    <*> (getTag "rank_drum"          cs >>= fromChunks)
-    <*> (getTag "rank_vocals"        cs >>= fromChunks)
-    <*> (getTag "rank_keys"          cs >>= fromChunks)
-    <*> (getTag "rank_pro_keys"      cs >>= fromChunks)
-    <*> (getTag "rank_band"          cs >>= fromChunks)
-    <*> (getTag "vocal_scroll_speed" cs >>= fromChunks)
-    <*> (getTag "anim_tempo"         cs >>= fromChunks)
-    <*> (getTag "vocal_gender"       cs >>= fromChunks)
-    <*> (getTag "vocal_percussion"   cs >>= fromChunks)
-    <*> (getTag "vocal_parts"        cs >>= fromChunks)
-    <*> (getTag "guide_pitch_volume" cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> Gamedata
+    <$> (dictLookup "preview_start_ms"   d >>= fromChunks)
+    <*> (dictLookup "rank_guitar"        d >>= fromChunks)
+    <*> (dictLookup "rank_bass"          d >>= fromChunks)
+    <*> (dictLookup "rank_drum"          d >>= fromChunks)
+    <*> (dictLookup "rank_vocals"        d >>= fromChunks)
+    <*> (dictLookup "rank_keys"          d >>= fromChunks)
+    <*> (dictLookup "rank_pro_keys"      d >>= fromChunks)
+    <*> (dictLookup "rank_band"          d >>= fromChunks)
+    <*> (dictLookup "vocal_scroll_speed" d >>= fromChunks)
+    <*> (dictLookup "anim_tempo"         d >>= fromChunks)
+    <*> (dictLookup "vocal_gender"       d >>= fromChunks)
+    <*> (dictLookup "vocal_percussion"   d >>= fromChunks)
+    <*> (dictLookup "vocal_parts"        d >>= fromChunks)
+    <*> (dictLookup "guide_pitch_volume" d >>= fromChunks)
 
 data Gender = Male | Female
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
@@ -179,35 +182,35 @@ data Metadata = Metadata
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Metadata where
-  toChunks md =
-    [ tagged "song_name"      $ toChunks $ songName     md
-    , tagged "artist_name"    $ toChunks $ artistName   md
-    , tagged "genre"          $ toChunks $ genre        md
-    , tagged "sub_genre"      $ toChunks $ subGenre     md
-    , tagged "year_released"  $ toChunks $ yearReleased md
-    , tagged "album_name"     $ toChunks $ albumName    md
-    , tagged "author"         $ toChunks $ author       md
-    , tagged "release_label"  $ toChunks $ releaseLabel md
-    , tagged "country"        $ toChunks $ country      md
-    , tagged "price"          $ toChunks $ price        md
-    , tagged "track_number"   $ toChunks $ trackNumber  md
-    , tagged "has_album"      $ toChunks $ hasAlbum     md
+  toChunks md = makeDict'
+    [ ("song_name"    , toChunks $ songName     md)
+    , ("artist_name"  , toChunks $ artistName   md)
+    , ("genre"        , toChunks $ genre        md)
+    , ("sub_genre"    , toChunks $ subGenre     md)
+    , ("year_released", toChunks $ yearReleased md)
+    , ("album_name"   , toChunks $ albumName    md)
+    , ("author"       , toChunks $ author       md)
+    , ("release_label", toChunks $ releaseLabel md)
+    , ("country"      , toChunks $ country      md)
+    , ("price"        , toChunks $ price        md)
+    , ("track_number" , toChunks $ trackNumber  md)
+    , ("has_album"    , toChunks $ hasAlbum     md)
     ]
 
 instance FromChunks Metadata where
-  fromChunks cs = Metadata
-    <$> (getTag "song_name"     cs >>= fromChunks)
-    <*> (getTag "artist_name"   cs >>= fromChunks)
-    <*> (getTag "genre"         cs >>= fromChunks)
-    <*> (getTag "sub_genre"     cs >>= fromChunks)
-    <*> (getTag "year_released" cs >>= fromChunks)
-    <*> (getTag "album_name"    cs >>= fromChunks)
-    <*> (getTag "author"        cs >>= fromChunks)
-    <*> (getTag "release_label" cs >>= fromChunks)
-    <*> (getTag "country"       cs >>= fromChunks)
-    <*> (getTag "price"         cs >>= fromChunks)
-    <*> (getTag "track_number"  cs >>= fromChunks)
-    <*> (getTag "has_album"     cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> Metadata
+    <$> (dictLookup "song_name"     d >>= fromChunks)
+    <*> (dictLookup "artist_name"   d >>= fromChunks)
+    <*> (dictLookup "genre"         d >>= fromChunks)
+    <*> (dictLookup "sub_genre"     d >>= fromChunks)
+    <*> (dictLookup "year_released" d >>= fromChunks)
+    <*> (dictLookup "album_name"    d >>= fromChunks)
+    <*> (dictLookup "author"        d >>= fromChunks)
+    <*> (dictLookup "release_label" d >>= fromChunks)
+    <*> (dictLookup "country"       d >>= fromChunks)
+    <*> (dictLookup "price"         d >>= fromChunks)
+    <*> (dictLookup "track_number"  d >>= fromChunks)
+    <*> (dictLookup "has_album"     d >>= fromChunks)
 
 newtype Genre = Genre B8.ByteString
   deriving (Eq, Ord, Show, Read)
@@ -296,15 +299,15 @@ data Midi = Midi
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Midi where
-  toChunks m =
-    [ tagged "file"          $ toChunks $ midiFile     m
-    , tagged "autogen_theme" $ toChunks $ autogenTheme m
+  toChunks m = makeDict'
+    [ ("file"         , toChunks $ midiFile     m)
+    , ("autogen_theme", toChunks $ autogenTheme m)
     ]
 
 instance FromChunks Midi where
-  fromChunks cs = Midi
-    <$> (getTag "file"          cs >>= fromChunks)
-    <*> (getTag "autogen_theme" cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> Midi
+    <$> (dictLookup "file"          d >>= fromChunks)
+    <*> (dictLookup "autogen_theme" d >>= fromChunks)
 
 data DryVox = DryVox
   { part0             :: DryVoxPart
@@ -314,19 +317,19 @@ data DryVox = DryVox
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks DryVox where
-  toChunks x =
-    [ tagged "part0"               $ toChunks $ part0             x
-    , tagged "part1"               $ toChunks $ part1             x
-    , tagged "part2"               $ toChunks $ part2             x
-    , tagged "tuning_offset_cents" $ toChunks $ tuningOffsetCents x
+  toChunks x = makeDict'
+    [ ("part0"              , toChunks $ part0             x)
+    , ("part1"              , toChunks $ part1             x)
+    , ("part2"              , toChunks $ part2             x)
+    , ("tuning_offset_cents", toChunks $ tuningOffsetCents x)
     ]
 
 instance FromChunks DryVox where
-  fromChunks cs = DryVox
-    <$> (getTag "part0"               cs >>= fromChunks)
-    <*> (getTag "part1"               cs >>= fromChunks)
-    <*> (getTag "part2"               cs >>= fromChunks)
-    <*> (getTag "tuning_offset_cents" cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> DryVox
+    <$> (dictLookup "part0"               d >>= fromChunks)
+    <*> (dictLookup "part1"               d >>= fromChunks)
+    <*> (dictLookup "part2"               d >>= fromChunks)
+    <*> (dictLookup "tuning_offset_cents" d >>= fromChunks)
 
 data DryVoxPart = DryVoxPart
   { dryVoxFile    :: B8.ByteString
@@ -334,15 +337,15 @@ data DryVoxPart = DryVoxPart
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks DryVoxPart where
-  toChunks x =
-    [ tagged "file"    $ toChunks $ dryVoxFile    x
-    , tagged "enabled" $ toChunks $ dryVoxEnabled x
+  toChunks x = makeDict'
+    [ ("file"   , toChunks $ dryVoxFile    x)
+    , ("enabled", toChunks $ dryVoxEnabled x)
     ]
 
 instance FromChunks DryVoxPart where
-  fromChunks cs = DryVoxPart
-    <$> (getTag "file"    cs >>= fromChunks)
-    <*> (getTag "enabled" cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> DryVoxPart
+    <$> (dictLookup "file"    d >>= fromChunks)
+    <*> (dictLookup "enabled" d >>= fromChunks)
 
 data Tracks = Tracks
   { drumLayout :: DrumLayout
@@ -357,29 +360,29 @@ data Tracks = Tracks
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks Tracks where
-  toChunks x =
-    [ tagged "drum_layout" $ toChunks $ drumLayout x
-    , tagged "drum_kit"    $ toChunks $ drumKit    x
-    , tagged "drum_kick"   $ toChunks $ drumKick   x
-    , tagged "drum_snare"  $ toChunks $ drumSnare  x
-    , tagged "bass"        $ toChunks $ bass       x
-    , tagged "guitar"      $ toChunks $ guitar     x
-    , tagged "vocals"      $ toChunks $ vocals     x
-    , tagged "keys"        $ toChunks $ keys       x
-    , tagged "backing"     $ toChunks $ backing    x
+  toChunks x = makeDict'
+    [ ("drum_layout", toChunks $ drumLayout x)
+    , ("drum_kit"   , toChunks $ drumKit    x)
+    , ("drum_kick"  , toChunks $ drumKick   x)
+    , ("drum_snare" , toChunks $ drumSnare  x)
+    , ("bass"       , toChunks $ bass       x)
+    , ("guitar"     , toChunks $ guitar     x)
+    , ("vocals"     , toChunks $ vocals     x)
+    , ("keys"       , toChunks $ keys       x)
+    , ("backing"    , toChunks $ backing    x)
     ]
 
 instance FromChunks Tracks where
-  fromChunks cs = Tracks
-    <$> (getTag "drum_layout" cs >>= fromChunks)
-    <*> (getTag "drum_kit"    cs >>= fromChunks)
-    <*> (getTag "drum_kick"   cs >>= fromChunks)
-    <*> (getTag "drum_snare"  cs >>= fromChunks)
-    <*> (getTag "bass"        cs >>= fromChunks)
-    <*> (getTag "guitar"      cs >>= fromChunks)
-    <*> (getTag "vocals"      cs >>= fromChunks)
-    <*> (getTag "keys"        cs >>= fromChunks)
-    <*> (getTag "backing"     cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> Tracks
+    <$> (dictLookup "drum_layout" d >>= fromChunks)
+    <*> (dictLookup "drum_kit"    d >>= fromChunks)
+    <*> (dictLookup "drum_kick"   d >>= fromChunks)
+    <*> (dictLookup "drum_snare"  d >>= fromChunks)
+    <*> (dictLookup "bass"        d >>= fromChunks)
+    <*> (dictLookup "guitar"      d >>= fromChunks)
+    <*> (dictLookup "vocals"      d >>= fromChunks)
+    <*> (dictLookup "keys"        d >>= fromChunks)
+    <*> (dictLookup "backing"     d >>= fromChunks)
 
 data DrumLayout
   = Kit
@@ -410,18 +413,26 @@ data AudioFile = AudioFile
   } deriving (Eq, Ord, Show, Read)
 
 instance ToChunks AudioFile where
-  toChunks x =
-    [ tagged "enabled"  $ toChunks $ audioEnabled x
-    , tagged "channels" $ toChunks $ channels     x
-    , tagged "pan"      $ toChunks $ pan          x
-    , tagged "vol"      $ toChunks $ vol          x
-    , tagged "file"     $ toChunks $ audioFile    x
+  toChunks x = makeDict'
+    [ ("enabled" , toChunks $ audioEnabled x)
+    , ("channels", toChunks $ channels     x)
+    , ("pan"     , toChunks $ pan          x)
+    , ("vol"     , toChunks $ vol          x)
+    , ("file"    , toChunks $ audioFile    x)
     ]
 
 instance FromChunks AudioFile where
-  fromChunks cs = AudioFile
-    <$> (getTag "enabled"  cs >>= fromChunks)
-    <*> (getTag "channels" cs >>= fromChunks)
-    <*> (getTag "pan"      cs >>= fromChunks)
-    <*> (getTag "vol"      cs >>= fromChunks)
-    <*> (getTag "file"     cs >>= fromChunks)
+  fromChunks = getDict >=> \d -> AudioFile
+    <$> (dictLookup "enabled"  d >>= fromChunks)
+    <*> (dictLookup "channels" d >>= fromChunks)
+    <*> (dictLookup "pan"      d >>= fromChunks)
+    <*> (dictLookup "vol"      d >>= fromChunks)
+    <*> (dictLookup "file"     d >>= fromChunks)
+
+dictLookup :: B8.ByteString -> Dict v -> Either String v
+dictLookup k (Dict m) = case Map.lookup k m of
+  Nothing -> Left $ "Couldn't find key " ++ show k
+  Just v  -> Right v
+
+makeDict' :: [(B8.ByteString, [Chunk])] -> [Chunk]
+makeDict' = makeDict . Dict . Map.fromList

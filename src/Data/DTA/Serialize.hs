@@ -1,8 +1,12 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Data.DTA.Serialize where
 
 import Data.DTA.Base
 import qualified Data.ByteString.Char8 as B8
 import Control.Applicative (liftA2)
+import qualified Data.Map as Map
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 -- | Class for types which are stored as complete DTA files.
 class DTAFormat a where
@@ -25,17 +29,42 @@ instance ToChunks DTA where
 instance FromChunks DTA where
   fromChunks = Right . DTA 0 . Tree 0
 
--- | @getTag tag chunks@ looks for a 'Chunk' of the form @(tag ...)@ and, if
--- found, returns the @...@
-getTag :: B8.ByteString -> [Chunk] -> Either String [Chunk]
-getTag t cs =
-  case [ xs | Parens (Tree _ (Key x : xs)) <- cs, x == t ] of
-    [rest] -> Right rest
-    xs     -> Left $ show (length xs) ++ " matches for tag " ++ B8.unpack t
+instance ToChunks Chunk where
+  toChunks x = [x]
 
--- | Creates an association list entry of the form located by 'getTag'.
-tagged :: B8.ByteString -> [Chunk] -> Chunk
-tagged t cs = Parens $ Tree 0 $ Key t : cs
+instance FromChunks Chunk where
+  fromChunks [x] = Right x
+  fromChunks cs = Left $ "Expected 1 chunk, got: " ++ show cs
+
+newtype Dict a = Dict { fromDict :: Map.Map B8.ByteString a }
+  deriving (Eq, Ord, Show, Read, Functor, F.Foldable, T.Traversable)
+
+instance (ToChunks a) => ToChunks (Dict a) where
+  toChunks = makeDict . fmap toChunks
+
+instance (FromChunks a) => FromChunks (Dict a) where
+  fromChunks cs = getDict cs >>= T.mapM fromChunks
+
+getDict :: [Chunk] -> Either String (Dict [Chunk])
+getDict cs = let
+  toPair c = case c of
+    Parens (Tree _ (Key k : rest)) -> Right (k, rest)
+    _ -> Left $ "Expected (tag rest...), got: " ++ show c
+  in fmap (Dict . Map.fromList) $ mapM toPair cs
+
+makeDict :: Dict [Chunk] -> [Chunk]
+makeDict (Dict m) =
+  [ Parens $ Tree 0 $ Key k : v | (k, v) <- Map.toList m ]
+
+newtype ParenList a = ParenList { fromParenList :: [a] }
+  deriving (Eq, Ord, Show, Read)
+
+instance (ToChunks a) => ToChunks (ParenList a) where
+  toChunks (ParenList xs) = [Parens $ Tree 0 $ toChunks xs]
+
+instance (FromChunks a) => FromChunks (ParenList a) where
+  fromChunks [Parens (Tree _ cs)] = fmap ParenList $ fromChunks cs
+  fromChunks cs = Left $ "Couldn't read as ParenList: " ++ show cs
 
 instance ToChunks Bool where
   toChunks True = [Int 1]

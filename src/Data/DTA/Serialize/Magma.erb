@@ -11,67 +11,7 @@ import Data.DTA
 import Data.DTA.Serialize
 
 <%
-def makeRecord(name, fields)
-  fields = fields.map do |f|
-    if f[1].nil? or f[1].empty?
-      f = f.dup
-      f[1] = f[0].gsub(/_([a-z])/) { $1.upcase }
-      f
-    else
-      f
-    end
-  end
-
-  records = fields.map do |f|
-    str = "#{f[1]} :: #{f[2]}"
-    str += " {- ^ #{f[3]} -}" if f[3]
-    str
-  end
-  deriving = 'deriving (Eq, Ord, Read, Show)'
-  data = "data #{name} = #{name} { #{records.join(', ')} } #{deriving}"
-
-  to_records = fields.map { |f| "(#{f[0].inspect}, toChunks $ #{f[1]} x)" }
-  to_defn =
-    "toChunks x = makeDict $ Dict $ Map.fromList [ #{to_records.join(', ')} ]"
-  to_instance = "instance ToChunks #{name} where { #{to_defn} }"
-
-  from_records =
-    fields.map { |f| "(dictLookup #{f[0].inspect} d >>= fromChunks)" }
-  from_defn =
-    "fromChunks = getDict >=> \\d -> #{name} <$> #{from_records.join(' <*> ')}"
-  from_instance = "instance FromChunks #{name} where { #{from_defn} }"
-
-  [data, to_instance, from_instance].join("\n\n")
-end
-
-def makeEnum(name, fields)
-  fields = fields.map do |f|
-    if f[1].nil? or f[1].empty?
-      f = f.dup
-      f[1] = f[0].gsub(/(^|_)([a-z])/) { $2.upcase }
-      f
-    else
-      f
-    end
-  end
-
-  records = fields.map do |f|
-    str = f[1]
-    str += " {- ^ #{f[2]} -}" if f[2]
-    str
-  end
-  deriving = 'deriving (Eq, Ord, Read, Show, Enum, Bounded)'
-  data = "data #{name} = #{records.join(' | ')} #{deriving}"
-
-  to_lines = fields.map { |f| "toChunks #{f[1]} = [Key #{f[0].inspect}]" }
-  to_instance = "instance ToChunks #{name} where { #{to_lines.join('; ')} }"
-
-  from_lines = fields.map { |f| "fromChunks [Key #{f[0].inspect}] = Right #{f[1]}" }
-  from_lines << "fromChunks cs = Left $ \"Couldn't read as #{name}: \" ++ show cs"
-  from_instance = "instance FromChunks #{name} where { #{from_lines.join('; ')} }"
-
-  [data, to_instance, from_instance].join("\n\n")
-end
+require File.expand_path(File.dirname(__FILE__) + '/make_data')
 %>
 
 <%= makeRecord('RBProj', [
@@ -149,9 +89,22 @@ end
 
 <%= makeRecord('Midi', [
   ['file'         , 'midiFile', 'B8.ByteString'],
-  ['autogen_theme', nil       , 'B8.ByteString',
-    '\"\" (Default), \"AggressiveMetal.rbtheme\", \"ArenaRock.rbtheme\", \"DarkHeavyRock.rbtheme\", \"DustyVintage.rbtheme\", \"EdgyProgRock.rbtheme\", \"FeelGoodPopRock.rbtheme\", \"GaragePunkRock.rbtheme\", \"PsychJamRock.rbtheme\", \"SlowJam.rbtheme\", \"SynthPop.rbtheme\"'],
+  ['autogen_theme', nil       , 'Either AutogenTheme B8.ByteString'],
   ]) %>
+
+<%= makeEnum('AutogenTheme', [
+  ['', 'DefaultTheme'],
+  (theme = 'AggressiveMetal'; ["#{theme}.rbtheme", theme]),
+  (theme = 'ArenaRock'      ; ["#{theme}.rbtheme", theme]),
+  (theme = 'DarkHeavyRock'  ; ["#{theme}.rbtheme", theme]),
+  (theme = 'DustyVintage'   ; ["#{theme}.rbtheme", theme]),
+  (theme = 'EdgyProgRock'   ; ["#{theme}.rbtheme", theme]),
+  (theme = 'FeelGoodPopRock'; ["#{theme}.rbtheme", theme]),
+  (theme = 'GaragePunkRock' ; ["#{theme}.rbtheme", theme]),
+  (theme = 'PsychJamRock'   ; ["#{theme}.rbtheme", theme]),
+  (theme = 'SlowJam'        ; ["#{theme}.rbtheme", theme]),
+  (theme = 'SynthPop'       ; ["#{theme}.rbtheme", theme]),
+  ], 'String') %>
 
 <%= makeRecord('DryVox', [
   ['part0'              , nil, 'DryVoxPart'],

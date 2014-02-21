@@ -66,7 +66,7 @@ songsDtaToMagma dm sp = RBProj $ Project
   , destinationFile = "magma.rba"
   , midi            = Midi
     { midiFile     = "notes.mid"
-    , autogenTheme = "AggressiveMetal.rbtheme"
+    , autogenTheme = Left DefaultTheme
     }
   , dryVox = DryVox
     { part0 = DryVoxPart

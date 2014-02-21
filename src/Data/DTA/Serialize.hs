@@ -36,6 +36,8 @@ instance FromChunks Chunk where
   fromChunks [x] = Right x
   fromChunks cs = Left $ "Expected 1 chunk, got: " ++ show cs
 
+-- | A key-value structure which is stored as a sequence of @(tag rest...)@
+-- chunks.
 newtype Dict a = Dict { fromDict :: Map.Map B8.ByteString a }
   deriving (Eq, Ord, Show, Read, Functor, F.Foldable, T.Traversable)
 

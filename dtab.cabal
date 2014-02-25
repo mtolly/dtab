@@ -44,6 +44,11 @@ Executable dta2magma
   Build-Depends:    base >= 4 && < 5, dtab, bytestring, containers
   Ghc-options:      -Wall
 
+Executable dta2fof
+  Main-Is:          dta2fof.hs
+  Build-Depends:    base >= 4 && < 5, dtab, bytestring, containers
+  Ghc-options:      -Wall
+
 Test-suite tests
   Type:             exitcode-stdio-1.0
   Main-is:          Test.hs

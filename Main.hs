@@ -9,6 +9,7 @@ import Data.DTA
 import Data.DTA.Crypt
 import Paths_dtab (version)
 
+main :: IO ()
 main = getArgs >>= \args ->
   case args of
     (mode : fin : fout : rest) ->

@@ -1,9 +1,21 @@
+# A set of Ruby functions which generate Haskell code for a datatype
+# and its ToChunks/FromChunks instances. makeRecord creates a record type,
+# which is serialized as a sequence of (key values...) pairs. makeEnum creates
+# a Haskell enumeration corresponding to scalar DTA values (keywords by
+# default).
+
+# Giving a String for a Haskell type denotes a required record field.
 class String
   def to_type
     self
   end
 end
 
+# Giving a Maybe for a Haskell type denotes an optional record field. The
+# Haskell side will have a Maybe in front of the type, and the value Nothing
+# corresponds to the key not being present. Note that if the key is present
+# in the record but the value does not parse as expected, the parse will fail
+# instead of creating Nothing.
 class Maybe
   def initialize(of_type)
     @of_type = of_type
@@ -19,8 +31,9 @@ def maybe(t)
 end
 
 # Makes a DTA record data-type with ToChunks and FromChunks instances.
-# The fields is an array of arrays of the form:
+# The fields argument is an array of arrays of the form:
 #   ['dta_key', 'HsConstructor' (or nil), 'HsType', 'haddock comment' (optional)]
+# 'HsType' can also be maybe('HsType').
 def makeRecord(name, fields)
   fields = fields.map do |f|
     if f[1].nil? or f[1].empty?
@@ -74,8 +87,13 @@ def makeRecord(name, fields)
 end
 
 # Makes a DTA enumeration data-type with ToChunks and FromChunks instances.
-# The fields is an array of arrays of the form:
-#   ['dta_key', 'HsConstructor' (nil or optional), 'haddock comment' (optional)]
+# The fields argument is an array of arrays of the form:
+#   ['dta_key', 'HsConstructor' (or nil/optional), 'haddock comment' (optional)]
+# The cons argument can choose a different scalar type for the enumeration.
+# By default, the constructor is Key (DTA bare or single-quoted keywords).
+# String makes an enumeration of double-quoted strings.
+# Int makes an enumeration of integers, and row[0] for each row should be
+# a Ruby integer.
 def makeEnum(name, fields, cons = 'Key')
   fields = fields.map do |f|
     if f[1].nil? or f[1].empty?

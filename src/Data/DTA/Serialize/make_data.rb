@@ -22,7 +22,7 @@ class Maybe
   end
 
   def to_type
-    "Maybe #{@of_type}"
+    "Maybe (#{@of_type})"
   end
 end
 

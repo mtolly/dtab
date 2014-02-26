@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Data.DTA.Serialize where
 
 import Data.DTA.Base
@@ -80,10 +80,12 @@ instance ToChunks Bool where
   toChunks True = [Int 1]
   toChunks False = [Int 0]
 
--- | An integer 0 or 1.
+-- | An integer 0 or 1, or keyword TRUE or FALSE.
 instance FromChunks Bool where
-  fromChunks [Int 1] = Right True
-  fromChunks [Int 0] = Right False
+  fromChunks [Int 1      ] = Right True
+  fromChunks [Int 0      ] = Right False
+  fromChunks [Key "TRUE" ] = Right True
+  fromChunks [Key "FALSE"] = Right False
   fromChunks cs = Left $ "Couldn't read as Bool: " ++ show cs
 
 instance ToChunks Integer where

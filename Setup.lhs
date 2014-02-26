@@ -5,7 +5,7 @@
 > import Distribution.Simple.Utils
 > import Distribution.PackageDescription
 > import Distribution.Simple.LocalBuildInfo
-> import System.Process (readProcess)
+> import System.Process (callCommand)
 
 > main = defaultMainWithHooks
 >   simpleUserHooks
@@ -16,6 +16,5 @@
 >     { platformIndependent = True
 >     , runPreProcessor = mkSimplePreProcessor $ \fin fout verbosity -> do
 >       info verbosity $ "erb-processing " ++ fin ++ " to " ++ fout
->       sout <- readProcess "erb" [fin] ""
->       writeFile fout sout
+>       callCommand $ "erb " ++ show fin ++ " > " ++ show fout
 >     }

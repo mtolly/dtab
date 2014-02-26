@@ -60,15 +60,16 @@ type Path = Either B8.ByteString Keyword
   ]) %>
 
 <%= makeRecord('Song', [
-  ['name'          , 'songName', 'B8.ByteString'                       ],
-  ['tracks_count'  , nil       , maybe('InParens [Integer]')           ],
-  ['tracks'        , nil       , 'InParens (Dict (InParens [Integer]))'],
-  ['vocal_parts'   , nil       , 'Integer'                             ],
-  ['pans'          , nil       , 'InParens [Float]'                    ],
-  ['vols'          , nil       , 'InParens [Float]'                    ],
-  ['cores'         , nil       , 'InParens [Integer]'                  ],
-  ['drum_solo'     , nil       , 'DrumSounds'                          ],
-  ['drum_freestyle', nil       , 'DrumSounds'                          ],
+  ['name'          , 'songName', 'B8.ByteString'            ],
+  ['tracks_count'  , nil       , maybe('InParens [Integer]')],
+  ['tracks'        , nil       ,
+    'InParens (Dict (Either Integer (InParens [Integer])))' ],
+  ['vocal_parts'   , nil       , 'Integer'                  ],
+  ['pans'          , nil       , 'InParens [Float]'         ],
+  ['vols'          , nil       , 'InParens [Float]'         ],
+  ['cores'         , nil       , 'InParens [Integer]'       ],
+  ['drum_solo'     , nil       , 'DrumSounds'               ],
+  ['drum_freestyle', nil       , 'DrumSounds'               ],
   ]) %>
 
 <%= makeRecord('DrumSounds', [

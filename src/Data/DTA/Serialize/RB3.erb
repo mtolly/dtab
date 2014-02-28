@@ -44,14 +44,34 @@ type Path = Either B8.ByteString Keyword
   ['album_art'          , nil, maybe('Bool')              ],
   ['album_name'         , nil, maybe('B8.ByteString')     ],
   ['album_track_number' , nil, maybe('Integer')           ],
-  ['vocal_tonic_note'   , nil, maybe('Integer')           ],
-  ['song_tonality'      , nil, maybe('Integer')           ],
+  ['vocal_tonic_note'   , nil, maybe('Pitch')             ],
+  ['song_tonality'      , nil, maybe('Tonality')          ],
   ['tuning_offset_cents', nil, maybe('Float')             ],
   ['real_guitar_tuning' , nil, maybe('InParens [Integer]')],
   ['real_bass_tuning'   , nil, maybe('InParens [Integer]')],
   ['guide_pitch_volume' , nil, maybe('Float')             ],
   ['encoding'           , nil, maybe('Keyword')           ],
   ]) %>
+
+<%= makeEnum('Pitch', [
+  [0 , 'C'     ],
+  [1 , 'CSharp'],
+  [2 , 'D'     ],
+  [3 , 'DSharp'],
+  [4 , 'E'     ],
+  [5 , 'F'     ],
+  [6 , 'FSharp'],
+  [7 , 'G'     ],
+  [8 , 'GSharp'],
+  [9 , 'A'     ],
+  [10, 'ASharp'],
+  [11, 'B'     ],
+  ], 'Int') %>
+
+<%= makeEnum('Tonality', [
+  [0, 'Major'],
+  [1, 'Minor'],
+  ], 'Int') %>
 
 <%= makeEnum('AnimTempo', [
   ['kTempoSlow'  , nil],

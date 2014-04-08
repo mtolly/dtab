@@ -32,7 +32,7 @@ end
 
 # Makes a DTA record data-type with ToChunks and FromChunks instances.
 # The fields argument is an array of arrays of the form:
-#   ['dta_key', 'HsConstructor' (or nil), 'HsType', 'haddock comment' (optional)]
+#   ['dta_key', 'hsRecordField' (or nil), 'HsType', 'haddock comment' (optional)]
 # 'HsType' can also be maybe('HsType').
 def makeRecord(name, fields)
   fields = fields.map do |f|

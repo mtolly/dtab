@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveTraversable, OverloadedStrings #-}
 module Data.DTA.Serialize where
 
 import Data.DTA.Base

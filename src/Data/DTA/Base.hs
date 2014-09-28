@@ -14,7 +14,7 @@ import Data.Word (Word32, Word8)
 
 import qualified Control.Monad.Trans.State as S
 import Data.Binary (Binary(..), Put, Get)
-import Data.Binary.Get (getWord32le, getWord16le, getBytes, skip)
+import Data.Binary.Get (getWord32le, getWord16le, getByteString, skip)
 import Data.Binary.IEEE754 (putFloat32le, getFloat32le)
 import Data.Binary.Put (putWord32le, putWord16le, putByteString)
 import qualified Test.QuickCheck as QC
@@ -115,7 +115,7 @@ putLenStr b = putWord32le (fromIntegral $ B.length b) >> putByteString b
 
 -- | DTB string format: 4-byte length, then a string in latin-1.
 getLenStr :: Get B.ByteString
-getLenStr = getWord32le >>= getBytes . fromIntegral
+getLenStr = getWord32le >>= getByteString . fromIntegral
 
 --
 -- QuickCheck testing instances

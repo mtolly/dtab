@@ -17,7 +17,7 @@ category:           Data
 
 library
   build-depends:
-    base                  >= 4.7      && < 4.8
+    base                  >= 4.6      && < 4.8
     , bytestring          >= 0.10.4.0 && < 0.11
     , transformers        >= 0.3.0.0  && < 0.5
     , data-binary-ieee754 >= 0.4.4    && < 0.5

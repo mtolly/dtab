@@ -1,62 +1,57 @@
-Name:               dtab
-Version:            0.8
-Synopsis:           Harmonix (Guitar Hero, Rock Band) DTA/DTB metadata library.
-Description:        The DTA/DTB format is an internal metadata format used by
-                    Harmonix Music Systems in their game series, including
-                    Guitar Hero, Rock Band, and Karaoke Revolution games. This
-                    library provides read/write functions for both the binary
-                    (DTB) and plain text (DTA) versions of the format, as well
-                    as the encryption algorithm used for DTB files found on game
-                    discs. Also included is an executable which accomplishes the
-                    same functions.
-License:            GPL
-License-file:       LICENSE
-Author:             Michael Tolly
-Maintainer:         tolly@wisc.edu
-Build-Type:         Custom
-Cabal-version:      >= 1.8
-Category:           Data
+name:               dtab
+version:            0.8
+synopsis:           Harmonix (Guitar Hero, Rock Band) DTA/DTB metadata library
+description:
 
-Library
-  Build-Depends:    base >= 4 && < 5, bytestring, transformers,
-                    data-binary-ieee754, binary, array, pretty, QuickCheck,
-                    containers,
-                    process >= 1.2 && < 1.3
-                    -- for Setup.lhs
-  Exposed-modules:  Data.DTA
-                    Data.DTA.Crypt
-                    Data.DTA.Serialize
-                    Data.DTA.Serialize.Magma
-                    Data.DTA.Serialize.RB3
-  Other-modules:    Data.DTA.Base
-                    Data.DTA.Lex
-                    Data.DTA.Parse
-                    Data.DTA.PrettyPrint
-  hs-source-dirs:   src
-  ghc-options:      -Wall
+  Read/write/encryption functions for the DTA/DTB metadata format used by
+  Harmonix Music Systems in their games, including the Guitar Hero, Rock Band,
+  and Karaoke Revolution series. Provides both a library and executable.
+
+license:            GPL
+license-file:       LICENSE
+author:             Michael Tolly
+maintainer:         miketolly@gmail.com
+build-type:         Simple
+cabal-version:      >= 1.10
+category:           Data
+
+library
+  build-depends:
+    base >= 4 && < 5
+    , bytestring
+    , transformers
+    , data-binary-ieee754
+    , binary
+    , array
+    , pretty
+    , containers
+    , process >= 1.2 && < 1.3
+    -- for Setup.lhs
+  exposed-modules:
+    Data.DTA
+    Data.DTA.Crypt
+    Data.DTA.Serialize
+    Data.DTA.Serialize.Magma
+    Data.DTA.Serialize.RB3
+  other-modules:
+    Data.DTA.Base
+    Data.DTA.Lex
+    Data.DTA.Parse
+    Data.DTA.PrettyPrint
+  hs-source-dirs:     src
+  ghc-options:        -Wall
+  default-language:   Haskell2010
 
 Executable dtab
-  Build-Depends:    base >= 4 && < 5, dtab, bytestring
-  Other-modules:    Paths_dtab
-  Main-Is:          Main.hs
-  Ghc-options:      -Wall
+  build-depends:
+    base >= 4 && < 5
+    , dtab
+    , bytestring
+  other-modules:      Paths_dtab
+  Main-Is:            Main.hs
+  ghc-options:        -Wall
+  default-language:   Haskell2010
 
--- Executable dta2magma
---   Main-Is:          dta2magma.hs
---   Build-Depends:    base >= 4 && < 5, dtab, bytestring, containers
---   Ghc-options:      -Wall
-
--- Executable dta2fof
---   Main-Is:          dta2fof.hs
---   Build-Depends:    base >= 4 && < 5, dtab, bytestring, containers
---   Ghc-options:      -Wall
-
-Test-suite tests
-  Type:             exitcode-stdio-1.0
-  Main-is:          Test.hs
-  Build-depends:    base >= 4 && < 5, dtab, bytestring, binary, QuickCheck
-  Ghc-options:      -Wall
-
-Source-Repository head
-  Type:             git
-  Location:         git://github.com/onyxite/dtab.git
+source-repository head
+  type:               git
+  location:           https://github.com/mtolly/dtab

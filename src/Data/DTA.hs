@@ -62,5 +62,3 @@ hToDTA h = B8.hPutStr h . bToDTA
 
 toDTA :: FilePath -> DTA -> IO ()
 toDTA fp dta = withFile fp WriteMode $ \h -> hToDTA h dta
-
-

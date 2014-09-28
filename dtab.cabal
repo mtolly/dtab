@@ -1,9 +1,9 @@
 name:               dtab
-version:            0.8
+version:            1.0
 synopsis:           Harmonix (Guitar Hero, Rock Band) DTA/DTB metadata library
 description:
 
-  Read/write/encryption functions for the DTA/DTB metadata format used by
+  Read\/write\/encryption functions for the DTA\/DTB metadata format used by
   Harmonix Music Systems in their games, including the Guitar Hero, Rock Band,
   and Karaoke Revolution series. Provides both a library and executable.
 
@@ -44,7 +44,7 @@ Executable dtab
   build-depends:
     base         >= 4.6      && < 4.8
     , bytestring >= 0.10.4.0 && < 0.11
-    , dtab       == 0.8
+    , dtab       == 1.0
   other-modules:      Paths_dtab
   Main-Is:            Main.hs
   ghc-options:        -Wall

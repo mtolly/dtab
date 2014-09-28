@@ -42,7 +42,7 @@ library
 
 Executable dtab
   build-depends:
-    base         >= 4.7      && < 4.8
+    base         >= 4.6      && < 4.8
     , bytestring >= 0.10.4.0 && < 0.11
     , dtab       == 0.8
   other-modules:      Paths_dtab

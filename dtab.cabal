@@ -18,13 +18,13 @@ category:           Data
 library
   build-depends:
     base                  >= 4.6      && < 4.8
-    , bytestring          >= 0.10.4.0 && < 0.11
+    , bytestring          >= 0.10.0.2 && < 0.11
     , transformers        >= 0.3.0.0  && < 0.5
     , data-binary-ieee754 >= 0.4.4    && < 0.5
-    , binary              >= 0.7.1.0  && < 0.8
-    , array               >= 0.5.0.0  && < 0.6
-    , pretty              >= 1.1.1.1  && < 1.2
-    , containers          >= 0.5.5.1  && < 0.6
+    , binary              >= 0.5.1.1  && < 0.8
+    , array               >= 0.4.0.1  && < 0.6
+    , pretty              >= 1.1.1.0  && < 1.2
+    , containers          >= 0.5.0.0  && < 0.6
   exposed-modules:
     Data.DTA
     Data.DTA.Crypt
@@ -43,7 +43,7 @@ library
 Executable dtab
   build-depends:
     base         >= 4.6      && < 4.8
-    , bytestring >= 0.10.4.0 && < 0.11
+    , bytestring >= 0.10.0.2 && < 0.11
     , dtab       == 1.0
   other-modules:      Paths_dtab
   Main-Is:            Main.hs

@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 module Data.DTA.Serialize.RB3 where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative ((<$>), (<*>))
+#endif
 import Control.Monad ((>=>))
 
 import qualified Data.ByteString.Char8 as B8

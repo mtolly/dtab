@@ -1,5 +1,6 @@
 -- | All functions that take a 'Handle' or 'FilePath' do their reading/writing
 -- strictly.
+{-# LANGUAGE CPP #-}
 module Data.DTA
 ( DTA(..), Tree(..), Chunk(..)
 , lFromDTB, hFromDTB, fromDTB
@@ -9,7 +10,9 @@ module Data.DTA
 , renumberFrom
 ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative ((<$>))
+#endif
 import System.IO (withFile, Handle, IOMode(ReadMode, WriteMode))
 
 import Data.Binary (decode, encode)

@@ -1,10 +1,14 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 module Data.DTA.Base
 ( DTA(..), Tree(..), Chunk(..)
 , renumberFrom
 ) where
 
-import Control.Applicative ((<$>), liftA2)
+#if __GLASGOW_HASKELL__ < 710
+import Control.Applicative ((<$>))
+#endif
+import Control.Applicative (liftA2)
 import Control.Monad (replicateM)
 import qualified Data.ByteString as B
 import Data.Data (Data)

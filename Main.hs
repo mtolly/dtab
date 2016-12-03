@@ -16,11 +16,11 @@ main = getArgs >>= \args ->
       withHandleIn fin $ \hin ->
         withHandleOut fout $ \hout -> case mode of
           "-a" -> hFromDTB hin >>= hToDTA hout
-          "-b" -> hFromDTA hin >>= hToDTB hout
+          "-b" -> hFromDTA hin >>= hToDTB hout . renumberFrom 1
           "-d" -> decryptHandle newCrypt hin hout
           "-e" -> encryptHandle newCrypt key hin hout
           "-D" -> decryptHandle oldCrypt hin hout
-          "-E" -> encryptHandle newCrypt key hin hout
+          "-E" -> encryptHandle oldCrypt key hin hout
           _ -> printUsage
           where key = case rest of
                   str : _ -> read str

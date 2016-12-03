@@ -33,7 +33,7 @@ import qualified Data.DTA.Lex as L
 
 %%
 
-File : Tree { DTA 0 $1 }
+File : Tree { DTA 1 $1 }
 
 Tree : Chunks { Tree 0 $1 }
 

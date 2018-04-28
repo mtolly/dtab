@@ -18,24 +18,6 @@ tokens :-
 $white+ ;
 \; [^\n]* ;
 
--- Numbers. Longest match rule means N.N is float, not int.
-\-? $digit+ { \pn str -> (pn, Int $ read str) }
-\-? $digit+ (\. $digit+)? (e \-? $digit+)? { \pn str -> (pn, Float $ read str) }
-
--- Variable names.
-\$ ($alpha | $digit | _)+ { \pn str -> (pn, Var $ B8.pack $ tail str) }
-
--- This reserved word needs to come before the general keyword rule.
-"kDataUnhandled" { \pn _ -> (pn, Unhandled) }
--- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
--- they also have letters in them.
-($alpha | $digit | _ | \/ | \.)+ { \pn str -> (pn, Key $ B8.pack str) }
--- Quoted keywords.
-' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ getKeyword str) }
-
--- Quoted strings.
-\" ([^\"] | \\\")* \" { \pn str -> (pn, String $ B8.pack $ read str) }
-
 -- Preprocessor commands.
 \#ifdef { \pn _ -> (pn, IfDef) }
 \#else { \pn _ -> (pn, Else) }
@@ -44,6 +26,24 @@ $white+ ;
 \#include { \pn _ -> (pn, Include) }
 \#merge { \pn _ -> (pn, Merge) }
 \#ifndef { \pn _ -> (pn, IfNDef) }
+
+-- Numbers. Longest match rule means N.N is float, not int.
+(\+ | \-)? $digit+ { \pn str -> (pn, Int $ read $ dropWhile (== '+') str) }
+(\+ | \-)? $digit+ (\. $digit+)? (e \-? $digit+)? { \pn str -> (pn, Float $ read $ dropWhile (== '+') str) }
+
+-- Variable names.
+\$ ($alpha | $digit | _)+ { \pn str -> (pn, Var $ B8.pack $ tail str) }
+
+-- This reserved word needs to come before the general keyword rule.
+"kDataUnhandled" { \pn _ -> (pn, Unhandled) }
+-- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
+-- they also have letters in them.
+($alpha | $digit | _ | \/ | \. | \- | \= | \# | \< | \>)+ { \pn str -> (pn, Key $ B8.pack str) }
+-- Quoted keywords.
+' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readKey str) }
+
+-- Quoted strings.
+\" [^\"]* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
 
 -- Subtrees.
 \( { \pn _ -> (pn, LParen) }
@@ -78,13 +78,20 @@ data Token
   deriving (Eq, Ord, Show, Read)
 
 -- | Reads a single-quoted string, by converting it to a double-quoted one.
-getKeyword :: String -> String
-getKeyword = read . go where
+readKey :: String -> String
+readKey = readString . go where
   go ('\'':xs) = '"' : go xs        -- string begin/end -> double-quote
-  go ('"':xs) = '\\' : '"' : go xs  -- double-quote gets escaped
+  go ('"':xs) = '\\' : 'q' : go xs  -- double-quote gets encoded as \q
   go ('\\':x:xs) = '\\' : x : go xs -- any escaped char can remain escaped
   go (x:xs) = x : go xs             -- all other chars are unchanged
   go [] = []
+
+-- | Reads the special format for double-quoted strings.
+readString :: String -> String
+readString = read . go where
+  go ('\\' : 'q' : rest) = '\\' : '"' : go rest
+  go ""                  = ""
+  go (c : rest)          = c : go rest
 
 scan :: String -> [(AlexPosn, Token)]
 scan = alexScanTokens

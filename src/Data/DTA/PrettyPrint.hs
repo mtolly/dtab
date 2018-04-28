@@ -3,6 +3,7 @@ module Data.DTA.PrettyPrint (sToDTA) where
 
 import qualified Data.ByteString.Char8 as B8
 import qualified Text.PrettyPrint.HughesPJ as PP
+import Data.Char (isAlphaNum)
 
 import Data.DTA.Base
 
@@ -18,7 +19,10 @@ ppChunk c = case c of
   EndIf -> PP.text "#endif"
   Parens tr -> PP.parens $ ppTree tr
   Braces tr -> PP.braces $ ppTree tr
-  String t -> PP.text $ show $ B8.unpack t
+  String t -> PP.text $ let
+    f '"' = "\\q"
+    f ch  = [ch]
+    in "\"" ++ concatMap f (B8.unpack t) ++ "\""
   Brackets tr -> PP.brackets $ ppTree tr
   Define t -> PP.hsep [PP.text "#define", ppText t]
   Include t -> PP.hsep [PP.text "#include", ppText t]
@@ -40,15 +44,18 @@ ppTree (Tree _ chks)
           Unhandled -> True
           _ -> False
 
--- | Produces a single-quoted string literal.
+-- | Produces a raw keyword or single-quoted string literal.
 ppKey :: String -> PP.Doc
-ppKey = PP.text . f . show where
-  -- simply convert a double-quoted string to single-quoted string
-  f "" = ""
-  f ('"':xs) = '\'' : f xs
-  f ('\'':xs) = '\\' : '\'' : f xs
-  f ('\\':x:xs) = '\\' : x : f xs
-  f (x:xs) = x : f xs
+ppKey s
+  | all (\c -> isAlphaNum c || elem c "_/.-=#<>") s = PP.text s
+  | otherwise = let
+    -- simply convert a double-quoted string to single-quoted string
+    f "" = ""
+    f ('"':xs) = '\'' : f xs
+    f ('\'':xs) = '\\' : '\'' : f xs
+    f ('\\':x:xs) = '\\' : x : f xs
+    f (x:xs) = x : f xs
+    in PP.text $ f $ show s
 
 ppDTA :: DTA -> PP.Doc
 ppDTA = PP.vcat . map ppChunk . treeChunks . topTree

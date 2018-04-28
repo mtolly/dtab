@@ -1,11 +1,11 @@
 -- | Pretty-print text (DTA) files with the HughesPJ library.
 module Data.DTA.PrettyPrint (sToDTA) where
 
-import qualified Data.ByteString.Char8 as B8
+import qualified Data.ByteString.Char8     as B8
+import           Data.Char                 (isAlphaNum)
 import qualified Text.PrettyPrint.HughesPJ as PP
-import Data.Char (isAlphaNum)
 
-import Data.DTA.Base
+import           Data.DTA.Base
 
 ppChunk :: Chunk -> PP.Doc
 ppChunk c = case c of
@@ -37,12 +37,12 @@ ppTree (Tree _ chks)
   | all simpleChunk chks = PP.hsep $ map ppChunk chks
   | otherwise            = PP.vcat $ map ppChunk chks
   where simpleChunk c = case c of
-          Int _ -> True
-          Float _ -> True
-          Var _ -> True
-          Key _ -> True
+          Int _     -> True
+          Float _   -> True
+          Var _     -> True
+          Key _     -> True
           Unhandled -> True
-          _ -> False
+          _         -> False
 
 -- | Produces a raw keyword or single-quoted string literal.
 ppKey :: String -> PP.Doc
@@ -50,11 +50,11 @@ ppKey s
   | all (\c -> isAlphaNum c || elem c "_/.-=#<>") s = PP.text s
   | otherwise = let
     -- simply convert a double-quoted string to single-quoted string
-    f "" = ""
-    f ('"':xs) = '\'' : f xs
-    f ('\'':xs) = '\\' : '\'' : f xs
+    f ""          = ""
+    f ('"':xs)    = '\'' : f xs
+    f ('\'':xs)   = '\\' : '\'' : f xs
     f ('\\':x:xs) = '\\' : x : f xs
-    f (x:xs) = x : f xs
+    f (x:xs)      = x : f xs
     in PP.text $ f $ show s
 
 ppDTA :: DTA -> PP.Doc

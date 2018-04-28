@@ -1,26 +1,28 @@
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE CPP #-}
 module Data.DTA.Base
 ( DTA(..), Tree(..), Chunk(..)
 , renumberFrom
 ) where
 
 #if __GLASGOW_HASKELL__ < 710
-import Control.Applicative ((<$>))
+import           Control.Applicative       ((<$>))
 #endif
-import Control.Applicative (liftA2)
-import Control.Monad (replicateM)
-import qualified Data.ByteString as B
-import Data.Data (Data)
-import Data.Int (Int32)
-import Data.Typeable (Typeable)
-import Data.Word (Word32, Word8)
+import           Control.Applicative       (liftA2)
+import           Control.Monad             (replicateM)
+import qualified Data.ByteString           as B
+import           Data.Data                 (Data)
+import           Data.Int                  (Int32)
+import           Data.Typeable             (Typeable)
+import           Data.Word                 (Word32, Word8)
 
 import qualified Control.Monad.Trans.State as S
-import Data.Binary (Binary(..), Put, Get)
-import Data.Binary.Get (getWord32le, getWord16le, getByteString, skip)
-import Data.Binary.IEEE754 (putFloat32le, getFloat32le)
-import Data.Binary.Put (putWord32le, putWord16le, putByteString)
+import           Data.Binary               (Binary (..), Get, Put)
+import           Data.Binary.Get           (getByteString, getWord16le,
+                                            getWord32le, skip)
+import           Data.Binary.IEEE754       (getFloat32le, putFloat32le)
+import           Data.Binary.Put           (putByteString, putWord16le,
+                                            putWord32le)
 
 --
 -- Type definitions
@@ -129,8 +131,8 @@ renumberFrom w (DTA b t) = DTA b $ S.evalState (renumberTree t) w where
     S.modify (+ 1) >> mapM renumberChunk sub
   renumberChunk :: Chunk -> S.State Word32 Chunk
   renumberChunk c = case c of
-    Parens tr -> Parens <$> renumberTree tr
-    Braces tr -> Braces <$> renumberTree tr
+    Parens tr   -> Parens <$> renumberTree tr
+    Braces tr   -> Braces <$> renumberTree tr
     Brackets tr -> Brackets <$> renumberTree tr
-    _ -> return c
+    _           -> return c
   -- alternately, with uniplate: renumberChunk = descendBiM renumberTree

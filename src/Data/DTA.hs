@@ -11,19 +11,20 @@ module Data.DTA
 ) where
 
 #if __GLASGOW_HASKELL__ < 710
-import Control.Applicative ((<$>))
+import           Control.Applicative   ((<$>))
 #endif
-import System.IO (withFile, Handle, IOMode(ReadMode, WriteMode))
+import           System.IO             (Handle, IOMode (ReadMode, WriteMode),
+                                        withFile)
 
-import Data.Binary (decode, encode)
-import qualified Data.ByteString as B
+import           Data.Binary           (decode, encode)
+import qualified Data.ByteString       as B
 import qualified Data.ByteString.Char8 as B8
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy  as BL
 
-import Data.DTA.Base
-import Data.DTA.Lex
-import Data.DTA.Parse
-import Data.DTA.PrettyPrint
+import           Data.DTA.Base
+import           Data.DTA.Lex
+import           Data.DTA.Parse
+import           Data.DTA.PrettyPrint
 
 lFromDTB :: BL.ByteString -> DTA
 lFromDTB = decode

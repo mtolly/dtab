@@ -1,5 +1,5 @@
 name:               dtab
-version:            1.0.0.1
+version:            1.1
 synopsis:           Harmonix (Guitar Hero, Rock Band) DTA/DTB metadata library
 description:
 
@@ -7,7 +7,7 @@ description:
   Harmonix Music Systems in their games, including the Guitar Hero, Rock Band,
   and Karaoke Revolution series. Provides both a library and executable.
 
-license:            GPL
+license:            BSD3
 license-file:       LICENSE
 author:             Michael Tolly
 maintainer:         miketolly@gmail.com
@@ -17,14 +17,14 @@ category:           Data
 
 library
   build-depends:
-    base
-    , bytestring
-    , transformers
-    , data-binary-ieee754
-    , binary
-    , array
-    , pretty
-    , containers
+    base >= 4.6 && < 4.12
+    , bytestring >= 0.10.0.2
+    , transformers >= 0.3.0.0
+    , data-binary-ieee754 >= 0.4.4
+    , binary >= 0.5.1.1
+    , array >= 0.4.0.1
+    , pretty >= 1.1.1.0
+    , containers >= 0.5.0.0
   exposed-modules:
     Data.DTA
     Data.DTA.Crypt
@@ -40,8 +40,8 @@ library
 
 Executable dtab
   build-depends:
-    base
-    , bytestring
+    base >= 4.6 && < 4.12
+    , bytestring >= 0.10.0.2
     , dtab
   other-modules:      Paths_dtab
   Main-Is:            Main.hs

@@ -43,7 +43,7 @@ $white+ ;
 ' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readKey str) }
 
 -- Quoted strings.
-\" [^\"]* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
+\" ([^\"] | \n)* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
 
 -- Subtrees.
 \( { \pn _ -> (pn, LParen) }

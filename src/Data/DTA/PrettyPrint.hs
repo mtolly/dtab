@@ -20,8 +20,9 @@ ppChunk c = case c of
   Parens tr -> PP.parens $ ppTree tr
   Braces tr -> PP.braces $ ppTree tr
   String t -> PP.text $ let
-    f '"' = "\\q"
-    f ch  = [ch]
+    f '"'  = "\\q"
+    f '\n' = "\\n"
+    f ch   = [ch]
     in "\"" ++ concatMap f (B8.unpack t) ++ "\""
   Brackets tr -> PP.brackets $ ppTree tr
   Define t -> PP.hsep [PP.text "#define", ppText t]

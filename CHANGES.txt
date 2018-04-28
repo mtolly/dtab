@@ -1,3 +1,7 @@
+1.1.0.1
+
+* Fix handling of newlines in printing and lexing `.dta`
+
 1.1
 
 * Fixed GH encryption typo in executable

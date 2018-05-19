@@ -48,7 +48,7 @@ ppTree (Tree _ chks)
 -- | Produces a raw keyword or single-quoted string literal.
 ppKey :: String -> PP.Doc
 ppKey s
-  | all (\c -> isAlphaNum c || elem c "_/.-=#<>") s = PP.text s
+  | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = PP.text s
   | otherwise = let
     -- simply convert a double-quoted string to single-quoted string
     f ""          = ""

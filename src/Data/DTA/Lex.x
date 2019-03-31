@@ -36,14 +36,13 @@ $white+ ;
 
 -- This reserved word needs to come before the general keyword rule.
 "kDataUnhandled" { \pn _ -> (pn, Unhandled) }
--- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
--- they also have letters in them.
-($alpha | $digit | _ | \/ | \. | \- | \= | \# | \< | \>)+ { \pn str -> (pn, Key $ B8.pack str) }
--- Quoted keywords.
-' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readKey str) }
-
 -- Quoted strings.
 \" ([^\"] | \n)* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
+-- Quoted keywords.
+' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readKey str) }
+-- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
+-- they also have letters in them.
+(. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Key $ B8.pack str) }
 
 -- Subtrees.
 \( { \pn _ -> (pn, LParen) }

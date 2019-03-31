@@ -3,7 +3,7 @@
 {-# LANGUAGE CPP #-}
 module Data.DTA
 ( DTA(..), Tree(..), Chunk(..)
-, lFromDTB, hFromDTB, fromDTB
+, lFromDTB, hFromDTB, hFromDTBv2, fromDTB
 , lToDTB, hToDTB, toDTB
 , sFromDTA, hFromDTA, fromDTA
 , sToDTA, hToDTA, toDTA
@@ -17,6 +17,7 @@ import           System.IO             (Handle, IOMode (ReadMode, WriteMode),
                                         withFile)
 
 import           Data.Binary           (decode, encode)
+import           Data.Binary.Get       (runGet)
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.ByteString.Lazy  as BL
@@ -37,6 +38,10 @@ fromDTB fp = withFile fp ReadMode hFromDTB
 
 hFromDTB :: Handle -> IO DTA
 hFromDTB h = decode . strictToLazy <$> B.hGetContents h
+  where strictToLazy b = BL.fromChunks [b]
+
+hFromDTBv2 :: Handle -> IO DTA
+hFromDTBv2 h = runGet (binaryDTA DTAVersion2) . strictToLazy <$> B.hGetContents h
   where strictToLazy b = BL.fromChunks [b]
 
 toDTB :: FilePath -> DTA -> IO ()

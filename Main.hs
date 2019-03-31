@@ -15,8 +15,9 @@ main = getArgs >>= \args ->
     (mode : fin : fout : rest) ->
       withHandleIn fin $ \hin ->
         withHandleOut fout $ \hout -> case mode of
-          "-a" -> hFromDTB hin >>= hToDTA hout
-          "-b" -> hFromDTA hin >>= hToDTB hout . renumberFrom 1
+          "-a" -> hFromDTB   hin >>= hToDTA hout
+          "-A" -> hFromDTBv2 hin >>= hToDTA hout
+          "-b" -> hFromDTA   hin >>= hToDTB hout . renumberFrom 1
           "-d" -> decryptHandle newCrypt hin hout
           "-e" -> encryptHandle newCrypt key hin hout
           "-D" -> decryptHandle oldCrypt hin hout
@@ -42,6 +43,7 @@ printUsage = do
     [ "dtab v"++v++", by onyxite. Built on earlier work by xorloser and deimos."
     , "Usage: dtab mode file-in file-out [encrypt-key]"
     , "Modes: -a converts DTB (binary) to DTA (text)"
+    , "       -A converts Fantasia format DTB (binary) to DTA (text)"
     , "       -b converts DTA (text) to DTB (binary)"
     , "       -d decrypts new-style DTB"
     , "       -e encrypts new-style DTB, with optional key"

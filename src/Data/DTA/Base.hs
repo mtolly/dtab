@@ -3,6 +3,7 @@
 module Data.DTA.Base
 ( DTA(..), Tree(..), Chunk(..)
 , renumberFrom
+, binaryDTA, DTAVersion(..)
 ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -61,10 +62,31 @@ data Chunk
 -- Binary (DTB) instances
 --
 
+data DTAVersion
+  = DTAVersion1 -- ^ everything before and including RB3 AFAIK
+  | DTAVersion2 -- ^ seen in Fantasia: Music Evolved
+
+binaryDTA :: DTAVersion -> Get DTA
+binaryDTA version = liftA2 DTA get (binaryTree version)
+
 -- Single byte, then a tree.
 instance Binary DTA where
   put (DTA b t) = put b >> put t
-  get = liftA2 DTA get get
+  get = binaryDTA DTAVersion1
+
+binaryTree :: DTAVersion -> Get Tree
+binaryTree version = case version of
+  DTAVersion1 -> do
+    len <- getWord16le
+    nid <- getWord32le
+    xs <- replicateM (fromIntegral len) (binaryChunk version)
+    return $ Tree nid xs
+  DTAVersion2 -> do
+    _unk <- getWord32le -- always zero?
+    len <- getWord32le
+    nid <- fromIntegral <$> getWord16le
+    xs <- replicateM (fromIntegral len) (binaryChunk version)
+    return $ Tree nid xs
 
 -- 2-byte length, 4-byte node ID, then each element in sequence.
 instance Binary Tree where
@@ -72,9 +94,27 @@ instance Binary Tree where
     putWord16le $ fromIntegral $ length chks
     putWord32le nid
     mapM_ put chks
-  get = do
-    len <- getWord16le
-    liftA2 Tree getWord32le $ replicateM (fromIntegral len) get
+  get = binaryTree DTAVersion1
+
+binaryChunk :: DTAVersion -> Get Chunk
+binaryChunk version = getWord32le >>= \cid -> case cid of
+  0x0  -> Int . fromIntegral <$> getWord32le
+  0x1  -> Float <$> getFloat32le
+  0x2  -> Var <$> getLenStr
+  0x5  -> Key <$> getLenStr
+  0x6  -> skip 4 >> return Unhandled
+  0x7  -> IfDef <$> getLenStr
+  0x8  -> skip 4 >> return Else
+  0x9  -> skip 4 >> return EndIf
+  0x10 -> Parens <$> binaryTree version
+  0x11 -> Braces <$> binaryTree version
+  0x12 -> String <$> getLenStr
+  0x13 -> Brackets <$> binaryTree version
+  0x20 -> Define <$> getLenStr
+  0x21 -> Include <$> getLenStr
+  0x22 -> Merge <$> getLenStr
+  0x23 -> IfNDef <$> getLenStr
+  _    -> fail $ "Unidentified DTB chunk with ID " ++ show cid
 
 -- 4-byte chunk type ID, then at least 4 bytes of chunk data.
 instance Binary Chunk where
@@ -95,24 +135,7 @@ instance Binary Chunk where
     Include b   -> putWord32le 0x21 >> putLenStr b
     Merge b     -> putWord32le 0x22 >> putLenStr b
     IfNDef b    -> putWord32le 0x23 >> putLenStr b
-  get = getWord32le >>= \cid -> case cid of
-    0x0  -> Int . fromIntegral <$> getWord32le
-    0x1  -> Float <$> getFloat32le
-    0x2  -> Var <$> getLenStr
-    0x5  -> Key <$> getLenStr
-    0x6  -> skip 4 >> return Unhandled
-    0x7  -> IfDef <$> getLenStr
-    0x8  -> skip 4 >> return Else
-    0x9  -> skip 4 >> return EndIf
-    0x10 -> Parens <$> get
-    0x11 -> Braces <$> get
-    0x12 -> String <$> getLenStr
-    0x13 -> Brackets <$> get
-    0x20 -> Define <$> getLenStr
-    0x21 -> Include <$> getLenStr
-    0x22 -> Merge <$> getLenStr
-    0x23 -> IfNDef <$> getLenStr
-    _    -> fail $ "Unidentified DTB chunk with ID " ++ show cid
+  get = binaryChunk DTAVersion1
 
 -- | DTB string format: 4-byte length, then a string in latin-1.
 putLenStr :: B.ByteString -> Put

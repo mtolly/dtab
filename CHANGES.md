@@ -1,3 +1,8 @@
+1.1.1
+
+* Fix parsing various non-alphanumeric characters in unquoted keywords
+* Add separate binary->text mode for new DTBs seen in Fantasia: Music Evolved
+
 1.1.0.1
 
 * Fix handling of newlines in printing and lexing `.dta`

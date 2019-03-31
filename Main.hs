@@ -40,14 +40,19 @@ printUsage :: IO ()
 printUsage = do
   let v = showVersion version
   mapM_ (IO.hPutStrLn IO.stderr)
-    [ "dtab v"++v++", by onyxite. Built on earlier work by xorloser and deimos."
+    [ "dtab v"++v++", by onyxite. Built on earlier work by xorloser, deimos, and maxton."
     , "Usage: dtab mode file-in file-out [encrypt-key]"
-    , "Modes: -a converts DTB (binary) to DTA (text)"
-    , "       -A converts Fantasia format DTB (binary) to DTA (text)"
+    , ""
+    , "RB3 and earlier text/binary conversion:"
+    , "       -a converts DTB (binary) to DTA (text)"
     , "       -b converts DTA (text) to DTB (binary)"
+    , "Post-RB3 text/binary conversion:"
+    , "       -A converts new format DTB (binary) to DTA (text)"
+    , "RB and later encryption:"
     , "       -d decrypts new-style DTB"
     , "       -e encrypts new-style DTB, with optional key"
+    , "Pre-RB encryption:"
     , "       -D decrypts old-style DTB"
     , "       -E encrypts old-style DTB, with optional key"
-    , "Old-style is used in early PS2 games, new-style otherwise."
+    , ""
     , "Use a hyphen (-) for stdin (file-in) or stdout (file-out)." ]

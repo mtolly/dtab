@@ -10,7 +10,6 @@ import Data.Int (Int32)
 %wrapper "posn"
 
 $digit = 0-9
-$alpha = [a-zA-Z]
 
 tokens :-
 
@@ -30,9 +29,14 @@ $white+ ;
 -- Numbers. Longest match rule means N.N is float, not int.
 (\+ | \-)? $digit+ { \pn str -> (pn, Int $ read $ dropWhile (== '+') str) }
 (\+ | \-)? $digit+ (\. $digit+)? (e \-? $digit+)? { \pn str -> (pn, Float $ read $ dropWhile (== '+') str) }
+(\+ | \-)? \. $digit+ (e \-? $digit+)? { \pn str -> (pn, Float $ read $ case dropWhile (== '+') str of
+  '-' : rest -> '-' : '0' : rest
+  s          -> '0' : s
+  )
+}
 
 -- Variable names.
-\$ ($alpha | $digit | _)+ { \pn str -> (pn, Var $ B8.pack $ tail str) }
+\$ (. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Var $ B8.pack $ tail str) }
 
 -- This reserved word needs to come before the general keyword rule.
 "kDataUnhandled" { \pn _ -> (pn, Unhandled) }

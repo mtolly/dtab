@@ -18,7 +18,7 @@ extra-source-files: CHANGES.md
 
 library
   build-depends:
-    base >= 4.6 && < 4.12
+    base >= 4.6 && < 5
     , bytestring >= 0.10.0.2
     , transformers >= 0.3.0.0
     , data-binary-ieee754 >= 0.4.4
@@ -41,7 +41,7 @@ library
 
 Executable dtab
   build-depends:
-    base >= 4.6 && < 4.12
+    base >= 4.6 && < 5
     , bytestring >= 0.10.0.2
     , dtab
   other-modules:      Paths_dtab

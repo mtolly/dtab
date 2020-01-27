@@ -1,3 +1,8 @@
+1.1.1.1
+
+* Fix variables with certain characters being incorrectly parsed as symbols
+* Fix description of new-style encryption in usage text
+
 1.1.1
 
 * Fix parsing various non-alphanumeric characters in unquoted keywords

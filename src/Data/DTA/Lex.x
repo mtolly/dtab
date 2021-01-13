@@ -80,19 +80,21 @@ data Token
   | IfNDef
   deriving (Eq, Ord, Show, Read)
 
--- | Reads a single-quoted string, by converting it to a double-quoted one.
-readKey :: String -> String
-readKey = readString . go where
-  go ('\'':xs) = '"' : go xs        -- string begin/end -> double-quote
-  go ('"':xs) = '\\' : 'q' : go xs  -- double-quote gets encoded as \q
-  go ('\\':x:xs) = '\\' : x : go xs -- any escaped char can remain escaped
-  go (x:xs) = x : go xs             -- all other chars are unchanged
-  go [] = []
+mirrorTail :: [a] -> [a]
+mirrorTail = go . drop 1 where
+  go []       = [] -- shouldn't happen
+  go [_]      = []
+  go (x : xs) = x : go xs
 
--- | Reads the special format for double-quoted strings.
+-- | Single quoted symbols don't support any escape sequences.
+readKey :: String -> String
+readKey = mirrorTail
+
+-- | Double quoted strings support @\n@ (newline) and @\q@ (double quote).
 readString :: String -> String
-readString = read . go where
-  go ('\\' : 'q' : rest) = '\\' : '"' : go rest
+readString = go . mirrorTail where
+  go ('\\' : 'n' : rest) = '\n' : go rest
+  go ('\\' : 'q' : rest) = '"' : go rest
   go ""                  = ""
   go (c : rest)          = c : go rest
 

@@ -19,17 +19,26 @@ ppChunk c = case c of
   EndIf -> PP.text "#endif"
   Parens tr -> PP.parens $ ppTree tr
   Braces tr -> PP.braces $ ppTree tr
-  String t -> PP.text $ let
-    f '"'  = "\\q"
-    f '\n' = "\\n"
-    f ch   = [ch]
-    in "\"" ++ concatMap f (B8.unpack t) ++ "\""
+  String t -> PP.text $ doubleQuotedString $ B8.unpack t
   Brackets tr -> PP.brackets $ ppTree tr
   Define t -> PP.hsep [PP.text "#define", ppText t]
   Include t -> PP.hsep [PP.text "#include", ppText t]
   Merge t -> PP.hsep [PP.text "#merge", ppText t]
   IfNDef t -> PP.hsep [PP.text "#ifndef", ppText t]
   where ppText = PP.text . B8.unpack
+
+doubleQuotedString :: String -> String
+doubleQuotedString t = let
+  f '"'  = "\\q"
+  f '\n' = "\\n"
+  f ch   = [ch]
+  hasIllegalSeq ('\\' : 'q' : _) = Just "Tried to encode a DTA string containing backslash then q (unsupported)"
+  hasIllegalSeq ('\\' : 'n' : _) = Just "Tried to encode a DTA string containing backslash then n (unsupported)"
+  hasIllegalSeq (_ : cs)         = hasIllegalSeq cs
+  hasIllegalSeq ""               = Nothing
+  in case hasIllegalSeq t of
+    Just err -> error err -- TODO better error handling
+    Nothing  -> "\"" ++ concatMap f t ++ "\""
 
 -- | Automatically chooses between horizontal and vertical arrangements,
 -- depending on what kind of chunks are in the tree.
@@ -49,14 +58,9 @@ ppTree (Tree _ chks)
 ppKey :: String -> PP.Doc
 ppKey s
   | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = PP.text s
-  | otherwise = let
-    -- simply convert a double-quoted string to single-quoted string
-    f ""          = ""
-    f ('"':xs)    = '\'' : f xs
-    f ('\'':xs)   = '\\' : '\'' : f xs
-    f ('\\':x:xs) = '\\' : x : f xs
-    f (x:xs)      = x : f xs
-    in PP.text $ f $ show s
+  | otherwise = if elem '\'' s
+    then error "Tried to encode a DTA symbol containing a single quote (unsupported)" -- TODO better error handling
+    else PP.text $ "'" <> s <> "'"
 
 ppDTA :: DTA -> PP.Doc
 ppDTA = PP.vcat . map ppChunk . treeChunks . topTree

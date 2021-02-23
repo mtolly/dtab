@@ -43,7 +43,7 @@ data Chunk
   = Int Int32
   | Float Float
   | Var B.ByteString
-  | Key B.ByteString
+  | Sym B.ByteString
   | Unhandled
   | IfDef B.ByteString
   | Else
@@ -101,7 +101,7 @@ binaryChunk version = getWord32le >>= \cid -> case cid of
   0x0  -> Int . fromIntegral <$> getWord32le
   0x1  -> Float <$> getFloat32le
   0x2  -> Var <$> getLenStr
-  0x5  -> Key <$> getLenStr
+  0x5  -> Sym <$> getLenStr
   0x6  -> skip 4 >> return Unhandled
   0x7  -> IfDef <$> getLenStr
   0x8  -> skip 4 >> return Else
@@ -122,7 +122,7 @@ instance Binary Chunk where
     Int i       -> putWord32le 0x0  >> putWord32le (fromIntegral i)
     Float f     -> putWord32le 0x1  >> putFloat32le f
     Var b       -> putWord32le 0x2  >> putLenStr b
-    Key b       -> putWord32le 0x5  >> putLenStr b
+    Sym b       -> putWord32le 0x5  >> putLenStr b
     Unhandled   -> putWord32le 0x6  >> putWord32le 0
     IfDef b     -> putWord32le 0x7  >> putLenStr b
     Else        -> putWord32le 0x8  >> putWord32le 0

@@ -14,7 +14,7 @@ import qualified Data.DTA.Lex as L
   int { (_, L.Int $$) }
   float { (_, L.Float $$) }
   var { (_, L.Var $$) }
-  key { (_, L.Key $$) }
+  sym { (_, L.Sym $$) }
   unhandled { (_, L.Unhandled) }
   ifdef { (_, L.IfDef) }
   else { (_, L.Else) }
@@ -43,19 +43,19 @@ Chunks : Chunk Chunks { $1 : $2 }
 Chunk : int { Int $1 }
       | float { Float $1 }
       | var { Var $1 }
-      | key { Key $1 }
+      | sym { Sym $1 }
       | unhandled { Unhandled }
-      | ifdef key { IfDef $2 }
+      | ifdef sym { IfDef $2 }
       | else { Else }
       | endif { EndIf }
       | '(' Tree ')' { Parens $2 }
       | '{' Tree '}' { Braces $2 }
       | string { String $1 }
       | '[' Tree ']' { Brackets $2 }
-      | define key { Define $2 }
-      | include key { Include $2 }
-      | merge key { Merge $2 }
-      | ifndef key { IfNDef $2 }
+      | define sym { Define $2 }
+      | include sym { Include $2 }
+      | merge sym { Merge $2 }
+      | ifndef sym { IfNDef $2 }
 
 {
 

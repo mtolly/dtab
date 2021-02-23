@@ -12,7 +12,7 @@ ppChunk c = case c of
   Int i -> PP.text $ show i
   Float f -> PP.text $ show f
   Var t -> PP.hcat [PP.char '$', ppText t]
-  Key t -> PP.text $ ppKey $ B8.unpack t
+  Sym t -> PP.text $ ppSym $ B8.unpack t
   Unhandled -> PP.text "kDataUnhandled"
   IfDef t -> PP.hsep [PP.text "#ifdef", ppText t]
   Else -> PP.text "#else"
@@ -45,13 +45,13 @@ ppTree (Tree _ chks)
           Int _     -> True
           Float _   -> True
           Var _     -> True
-          Key _     -> True
+          Sym _     -> True
           Unhandled -> True
           _         -> False
 
--- | Produces a raw keyword or single-quoted string literal.
-ppKey :: String -> String
-ppKey s
+-- | Produces a raw symbol or single-quoted symbol literal.
+ppSym :: String -> String
+ppSym s
   | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = s
   | otherwise = let
     f '\'' = "\\q"

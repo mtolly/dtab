@@ -38,15 +38,15 @@ $white+ ;
 -- Variable names.
 \$ (. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Var $ B8.pack $ tail str) }
 
--- This reserved word needs to come before the general keyword rule.
+-- This reserved word needs to come before the general symbol rule.
 "kDataUnhandled" { \pn _ -> (pn, Unhandled) }
 -- Quoted strings.
 \" ([^\"] | \n)* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
--- Quoted keywords.
-' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readQuotedSymbol str) }
--- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
+-- Quoted symbols.
+' ([^'] | \\')* ' { \pn str -> (pn, Sym $ B8.pack $ readQuotedSymbol str) }
+-- Raw symbols. Note: these can start with digits, like "3sand7s", as long as
 -- they also have letters in them.
-(. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Key $ B8.pack str) }
+(. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Sym $ B8.pack str) }
 
 -- Subtrees.
 \( { \pn _ -> (pn, LParen) }
@@ -62,7 +62,7 @@ data Token
   = Int Int32
   | Float Float
   | Var B8.ByteString
-  | Key B8.ByteString
+  | Sym B8.ByteString
   | Unhandled
   | IfDef
   | Else

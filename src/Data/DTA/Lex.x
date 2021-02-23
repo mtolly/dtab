@@ -43,7 +43,7 @@ $white+ ;
 -- Quoted strings.
 \" ([^\"] | \n)* \" { \pn str -> (pn, String $ B8.pack $ readString str) }
 -- Quoted keywords.
-' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readKey str) }
+' ([^'] | \\')* ' { \pn str -> (pn, Key $ B8.pack $ readQuotedSymbol str) }
 -- Raw keywords. Note: these can start with digits, like "3sand7s", as long as
 -- they also have letters in them.
 (. # $white # [ \( \) \{ \} \[ \] ])+ { \pn str -> (pn, Key $ B8.pack str) }
@@ -86,17 +86,30 @@ mirrorTail = go . drop 1 where
   go [_]      = []
   go (x : xs) = x : go xs
 
--- | Single quoted symbols don't support any escape sequences.
-readKey :: String -> String
-readKey = mirrorTail
+{-
+Escape sequences differ slightly in different games + other software like Magma.
+To support encoding any character, we implement the following:
+  \q means double quote inside double quotes, or single quote inside single quotes
+  \n means newline in either double or single quotes
+  \\ means literal backslash
+Backslash not followed by backslash n or q also becomes a literal backslash.
+-}
 
--- | Double quoted strings support @\n@ (newline) and @\q@ (double quote).
+readQuotedSymbol :: String -> String
+readQuotedSymbol = go . mirrorTail where
+  go ('\\' : 'n'  : rest) = '\n' : go rest
+  go ('\\' : 'q'  : rest) = '\'' : go rest
+  go ('\\' : '\\' : rest) = '\\' : go rest
+  go ""                   = ""
+  go (c : rest)           = c : go rest
+
 readString :: String -> String
 readString = go . mirrorTail where
-  go ('\\' : 'n' : rest) = '\n' : go rest
-  go ('\\' : 'q' : rest) = '"' : go rest
-  go ""                  = ""
-  go (c : rest)          = c : go rest
+  go ('\\' : 'n'  : rest) = '\n' : go rest
+  go ('\\' : 'q'  : rest) = '"'  : go rest
+  go ('\\' : '\\' : rest) = '\\' : go rest
+  go ""                   = ""
+  go (c : rest)           = c : go rest
 
 scan :: String -> [(AlexPosn, Token)]
 scan = alexScanTokens

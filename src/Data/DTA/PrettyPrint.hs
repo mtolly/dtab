@@ -12,7 +12,7 @@ ppChunk c = case c of
   Int i -> PP.text $ show i
   Float f -> PP.text $ show f
   Var t -> PP.hcat [PP.char '$', ppText t]
-  Key t -> ppKey $ B8.unpack t
+  Key t -> PP.text $ ppKey $ B8.unpack t
   Unhandled -> PP.text "kDataUnhandled"
   IfDef t -> PP.hsep [PP.text "#ifdef", ppText t]
   Else -> PP.text "#else"
@@ -31,14 +31,9 @@ doubleQuotedString :: String -> String
 doubleQuotedString t = let
   f '"'  = "\\q"
   f '\n' = "\\n"
+  f '\\' = "\\\\"
   f ch   = [ch]
-  hasIllegalSeq ('\\' : 'q' : _) = Just "Tried to encode a DTA string containing backslash then q (unsupported)"
-  hasIllegalSeq ('\\' : 'n' : _) = Just "Tried to encode a DTA string containing backslash then n (unsupported)"
-  hasIllegalSeq (_ : cs)         = hasIllegalSeq cs
-  hasIllegalSeq ""               = Nothing
-  in case hasIllegalSeq t of
-    Just err -> error err -- TODO better error handling
-    Nothing  -> "\"" ++ concatMap f t ++ "\""
+  in "\"" ++ concatMap f t ++ "\""
 
 -- | Automatically chooses between horizontal and vertical arrangements,
 -- depending on what kind of chunks are in the tree.
@@ -55,12 +50,15 @@ ppTree (Tree _ chks)
           _         -> False
 
 -- | Produces a raw keyword or single-quoted string literal.
-ppKey :: String -> PP.Doc
+ppKey :: String -> String
 ppKey s
-  | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = PP.text s
-  | otherwise = if elem '\'' s
-    then error "Tried to encode a DTA symbol containing a single quote (unsupported)" -- TODO better error handling
-    else PP.text $ "'" <> s <> "'"
+  | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = s
+  | otherwise = let
+    f '\'' = "\\q"
+    f '\n' = "\\n"
+    f '\\' = "\\\\"
+    f ch   = [ch]
+    in "'" <> concatMap f s <> "'"
 
 ppDTA :: DTA -> PP.Doc
 ppDTA = PP.vcat . map ppChunk . treeChunks . topTree

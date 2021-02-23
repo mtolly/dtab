@@ -25,6 +25,8 @@ $white+ ;
 \#include { \pn _ -> (pn, Include) }
 \#merge { \pn _ -> (pn, Merge) }
 \#ifndef { \pn _ -> (pn, IfNDef) }
+\#autorun { \pn _ -> (pn, Autorun) }
+\#undef { \pn _ -> (pn, Undef) }
 
 -- Numbers. Longest match rule means N.N is float, not int.
 (\+ | \-)? $digit+ { \pn str -> (pn, Int $ read $ dropWhile (== '+') str) }
@@ -78,6 +80,8 @@ data Token
   | Include
   | Merge
   | IfNDef
+  | Autorun
+  | Undef
   deriving (Eq, Ord, Show, Read)
 
 mirrorTail :: [a] -> [a]

@@ -56,6 +56,8 @@ data Chunk
   | Include B.ByteString
   | Merge B.ByteString
   | IfNDef B.ByteString
+  | Autorun
+  | Undef B.ByteString
   deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 --
@@ -114,6 +116,8 @@ binaryChunk version = getWord32le >>= \cid -> case cid of
   0x21 -> Include <$> getLenStr
   0x22 -> Merge <$> getLenStr
   0x23 -> IfNDef <$> getLenStr
+  0x24 -> skip 4 >> return Autorun
+  0x25 -> Undef <$> getLenStr
   _    -> fail $ "Unidentified DTB chunk with ID " ++ show cid
 
 -- 4-byte chunk type ID, then at least 4 bytes of chunk data.
@@ -135,6 +139,8 @@ instance Binary Chunk where
     Include b   -> putWord32le 0x21 >> putLenStr b
     Merge b     -> putWord32le 0x22 >> putLenStr b
     IfNDef b    -> putWord32le 0x23 >> putLenStr b
+    Autorun     -> putWord32le 0x24 >> putWord32le 0
+    Undef b     -> putWord32le 0x25 >> putLenStr b
   get = binaryChunk DTAVersion1
 
 -- | DTB string format: 4-byte length, then a string in latin-1.

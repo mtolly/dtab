@@ -30,6 +30,8 @@ import qualified Data.DTA.Lex as L
   include { (_, L.Include) }
   merge { (_, L.Merge) }
   ifndef { (_, L.IfNDef) }
+  autorun { (_, L.Autorun) }
+  undef { (_, L.Undef) }
 
 %%
 
@@ -56,6 +58,8 @@ Chunk : int { Int $1 }
       | include sym { Include $2 }
       | merge sym { Merge $2 }
       | ifndef sym { IfNDef $2 }
+      | autorun { Autorun }
+      | undef sym { Undef $2 }
 
 {
 

@@ -25,6 +25,8 @@ ppChunk c = case c of
   Include t -> PP.hsep [PP.text "#include", ppText t]
   Merge t -> PP.hsep [PP.text "#merge", ppText t]
   IfNDef t -> PP.hsep [PP.text "#ifndef", ppText t]
+  Autorun -> PP.text "#autorun"
+  Undef t -> PP.hsep [PP.text "#undef", ppText t]
   where ppText = PP.text . B8.unpack
 
 doubleQuotedString :: String -> String

@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/mtolly/dtab.svg?branch=master)](https://travis-ci.org/mtolly/dtab)
-
 `dtab`, DTA/DTB toolkit by onyxite (miketolly@gmail.com).
 
 Heavily built on previous programs & research by:

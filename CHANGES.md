@@ -1,3 +1,9 @@
+1.2
+
+* Rename Key constructor to Sym
+* Fixed parsing/emitting of escape sequences in strings and symbols
+* Add #autorun and #undef constructs found in later games
+
 1.1.1.1
 
 * Fix variables with certain characters being incorrectly parsed as symbols

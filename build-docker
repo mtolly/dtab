@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+set -u
+
+docker build -t onyxite/dtab .
+docker run -v "$(pwd)":/external onyxite/dtab bash -c "cp /dtab/dtab /external"
+
+VERSION=$(grep -i 'version:' dtab.cabal | awk '{print $2}' | head -n 1)
+ZIPNAME=dtab-v$VERSION-linux-x64
+rm -rf $ZIPNAME $ZIPNAME.zip
+mkdir $ZIPNAME
+mv dtab       $ZIPNAME/dtab
+cp README.md  $ZIPNAME/README.txt
+cp LICENSE    $ZIPNAME/LICENSE.txt
+cp CHANGES.md $ZIPNAME/CHANGES.txt
+zip -r $ZIPNAME.zip $ZIPNAME

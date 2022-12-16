@@ -1,3 +1,7 @@
+1.2.1
+
+* Fix emitting symbols that can look like numeric literals without quotes
+
 1.2
 
 * Rename Key constructor to Sym

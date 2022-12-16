@@ -2,31 +2,31 @@
 module Data.DTA.PrettyPrint (sToDTA) where
 
 import qualified Data.ByteString.Char8     as B8
-import           Data.Char                 (isAlphaNum)
+import           Data.Char                 (isAlpha, isAlphaNum, isDigit)
 import qualified Text.PrettyPrint.HughesPJ as PP
 
 import           Data.DTA.Base
 
 ppChunk :: Chunk -> PP.Doc
 ppChunk c = case c of
-  Int i -> PP.text $ show i
-  Float f -> PP.text $ show f
-  Var t -> PP.hcat [PP.char '$', ppText t]
-  Sym t -> PP.text $ ppSym $ B8.unpack t
-  Unhandled -> PP.text "kDataUnhandled"
-  IfDef t -> PP.hsep [PP.text "#ifdef", ppText t]
-  Else -> PP.text "#else"
-  EndIf -> PP.text "#endif"
-  Parens tr -> PP.parens $ ppTree tr
-  Braces tr -> PP.braces $ ppTree tr
-  String t -> PP.text $ doubleQuotedString $ B8.unpack t
+  Int i       -> PP.text $ show i
+  Float f     -> PP.text $ show f
+  Var t       -> PP.hcat [PP.char '$', ppText t]
+  Sym t       -> PP.text $ ppSym $ B8.unpack t
+  Unhandled   -> PP.text "kDataUnhandled"
+  IfDef t     -> PP.hsep [PP.text "#ifdef", ppText t]
+  Else        -> PP.text "#else"
+  EndIf       -> PP.text "#endif"
+  Parens tr   -> PP.parens $ ppTree tr
+  Braces tr   -> PP.braces $ ppTree tr
+  String t    -> PP.text $ doubleQuotedString $ B8.unpack t
   Brackets tr -> PP.brackets $ ppTree tr
-  Define t -> PP.hsep [PP.text "#define", ppText t]
-  Include t -> PP.hsep [PP.text "#include", ppText t]
-  Merge t -> PP.hsep [PP.text "#merge", ppText t]
-  IfNDef t -> PP.hsep [PP.text "#ifndef", ppText t]
-  Autorun -> PP.text "#autorun"
-  Undef t -> PP.hsep [PP.text "#undef", ppText t]
+  Define t    -> PP.hsep [PP.text "#define", ppText t]
+  Include t   -> PP.hsep [PP.text "#include", ppText t]
+  Merge t     -> PP.hsep [PP.text "#merge", ppText t]
+  IfNDef t    -> PP.hsep [PP.text "#ifndef", ppText t]
+  Autorun     -> PP.text "#autorun"
+  Undef t     -> PP.hsep [PP.text "#undef", ppText t]
   where ppText = PP.text . B8.unpack
 
 doubleQuotedString :: String -> String
@@ -54,7 +54,10 @@ ppTree (Tree _ chks)
 -- | Produces a raw symbol or single-quoted symbol literal.
 ppSym :: String -> String
 ppSym s
-  | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s && not (null s) = s
+  | all (\c -> isAlphaNum c || elem c "_/.-=#<>&!") s
+    && not (null s)
+    && not (any isDigit s && all (not . isAlpha) s) -- reject anything that looks like int or float literal
+    = s
   | otherwise = let
     f '\'' = "\\q"
     f '\n' = "\\n"
